@@ -31,7 +31,7 @@ func main() {
 	algoliaWriteAPIKey = os.Getenv("ALGOLIA_WRITE_API_KEY"); 
 
 	client := search.NewClient(algoliaAppID, algoliaAPIKey)
-	index := client.InitIndex(algoliaIndexName);
+	index := client.InitIndex(algoliaIndexName)
 
 	log.Printf("Algolia App ID: %q", algoliaAppID)
 	log.Printf("Algolia Index Name: %q", algoliaIndexName)
