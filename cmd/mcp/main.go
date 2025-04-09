@@ -166,7 +166,7 @@ func main() {
 
 	mcps.AddTool(insertObjectTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
     
-    if writeClient == nil {
+                if writeClient == nil {
 			return mcp.NewToolResultError("write API key not set, cannot insert objects"), nil
 		}
     
