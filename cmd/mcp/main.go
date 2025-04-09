@@ -163,8 +163,13 @@ func main() {
 			mcp.Required(),
 		),
 	)
-	
+
 	mcps.AddTool(insertObjectTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+    
+    if writeClient == nil {
+			return mcp.NewToolResultError("write API key not set, cannot insert objects"), nil
+		}
+    
 		objStr, ok := req.Params.Arguments["object"].(string)
 		if !ok {
 			return mcp.NewToolResultError("invalid object format, expected JSON string"), nil
@@ -201,6 +206,7 @@ func main() {
 	)
 	
 	mcps.AddTool(insertObjectsTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+
 		if writeClient == nil {
 			return mcp.NewToolResultError("write API key not set, cannot insert objects"), nil
 		}
