@@ -13,7 +13,7 @@ import (
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 )
 
-func RegisterRunQuery(mcps *server.MCPServer, index *search.Index) {
+func RegisterRunQuery(mcps *server.MCPServer, index *search.Index, client *search.Client) {
 	runQueryTool := mcp.NewTool(
 		"run_query",
 		mcp.WithDescription("Run a query against the Algolia search index"),

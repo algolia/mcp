@@ -50,7 +50,7 @@ func main() {
 		server.WithLogging(),
 	)
 
-	amcp.RegisterRunQuery(mcps, index)
+	amcp.RegisterRunQuery(mcps, index, client)
 	amcp.RegisterGetObject(mcps, index)
 	amcp.RegisterGetSettings(mcps, index)
 	amcp.RegisterSearchRules(mcps, index)
