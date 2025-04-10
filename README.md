@@ -17,7 +17,7 @@ Requirements:
 Clone the repo, amd build the mcp server:
 
 ```shell
-$ git clone https://github.com/algolia/mcp
+$ git clone git@github.com:algolia/mcp.git
 $ cd mcp/cmd/mcp
 $ go build
 ```
