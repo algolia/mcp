@@ -1,4 +1,4 @@
-package mcp
+package rules
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/opt"
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/mcp/pkg/common"
 )
 
 func RegisterSearchRules(mcps *server.MCPServer, index *search.Index) {
@@ -54,6 +55,6 @@ func RegisterSearchRules(mcps *server.MCPServer, index *search.Index) {
 			return nil, fmt.Errorf("could not search rules: %w", err)
 		}
 
-		return jsonResponse("rules", resp)
+		return common.JsonResponse("rules", resp)
 	})
 }

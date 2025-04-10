@@ -5,11 +5,14 @@ import (
 	"log"
 	"os"
 
-	amcp "github.com/algolia/mcp"
-
 	"github.com/mark3labs/mcp-go/server"
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/mcp/pkg/search/indices"
+	"github.com/algolia/mcp/pkg/search/query"
+	"github.com/algolia/mcp/pkg/search/records"
+	"github.com/algolia/mcp/pkg/search/rules"
+	"github.com/algolia/mcp/pkg/search/synonyms"
 )
 
 func main() {
@@ -50,14 +53,23 @@ func main() {
 		server.WithLogging(),
 	)
 
-	amcp.RegisterRunQuery(mcps, index)
-	amcp.RegisterGetObject(mcps, index)
-	amcp.RegisterGetSettings(mcps, index)
-	amcp.RegisterSearchRules(mcps, index)
-	amcp.RegisterSearchSynonym(mcps, index)
+	// SEARCH TOOLS
+	// Tools for managing indices
+	indices.RegisterGetSettings(mcps, index)
 
-	amcp.RegisterInsertObject(mcps, writeIndex)
-	amcp.RegisterInsertObjects(mcps, writeIndex)
+	// Tools for managing records
+	records.RegisterGetObject(mcps, index)
+	records.RegisterInsertObject(mcps, writeIndex)
+	records.RegisterInsertObjects(mcps, writeIndex)
+
+	// Tools for searching
+	query.RegisterRunQuery(mcps, index)
+
+	// Tools for managing rules
+	rules.RegisterSearchRules(mcps, index)
+
+	// Tools for managing synonyms
+	synonyms.RegisterSearchSynonym(mcps, index)
 
 	if err := server.ServeStdio(mcps); err != nil {
 		fmt.Printf("Server error: %v\n", err)

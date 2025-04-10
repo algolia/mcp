@@ -1,9 +1,10 @@
-package mcp
+package indices
 
 import (
 	"context"
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/mcp/pkg/common"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -19,6 +20,6 @@ func RegisterGetSettings(mcps *server.MCPServer, index *search.Index) {
 		if err != nil {
 			return nil, err
 		}
-		return jsonResponse("settings", settings)
+		return common.JsonResponse("settings", settings)
 	})
 }

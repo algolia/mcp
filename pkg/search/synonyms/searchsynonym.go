@@ -1,4 +1,4 @@
-package mcp
+package synonyms
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/mcp/pkg/common"
 )
 
 func RegisterSearchSynonym(mcps *server.MCPServer, index *search.Index) {
@@ -28,6 +29,6 @@ func RegisterSearchSynonym(mcps *server.MCPServer, index *search.Index) {
 			return nil, fmt.Errorf("could not search synonyms: %w", err)
 		}
 
-		return jsonResponse("synonyms", resp)
+		return common.JsonResponse("synonyms", resp)
 	})
 }

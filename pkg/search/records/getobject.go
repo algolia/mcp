@@ -1,4 +1,4 @@
-package mcp
+package records
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/mcp/pkg/common"
 )
 
 func RegisterGetObject(mcps *server.MCPServer, index *search.Index) {
@@ -30,6 +31,6 @@ func RegisterGetObject(mcps *server.MCPServer, index *search.Index) {
 				fmt.Sprintf("could not get object: %v", err),
 			), nil
 		}
-		return jsonResponse("object", x)
+		return common.JsonResponse("object", x)
 	})
 }
