@@ -1,4 +1,4 @@
-package common
+package mcputil
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-func JsonResponse(name string, x any) (*mcp.CallToolResult, error) {
+func JSONToolResult(name string, x any) (*mcp.CallToolResult, error) {
 	b, err := json.Marshal(x)
 	if err != nil {
 		return nil, fmt.Errorf("could not marshal response: %w", err)
@@ -21,7 +21,7 @@ func JsonResponse(name string, x any) (*mcp.CallToolResult, error) {
 	), nil
 }
 
-func JsonResource(x any) ([]mcp.ResourceContents, error) {
+func JSONResource(x any) ([]mcp.ResourceContents, error) {
 	b, err := json.Marshal(x)
 	if err != nil {
 		return nil, fmt.Errorf("could not marshal response: %w", err)

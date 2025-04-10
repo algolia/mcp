@@ -8,7 +8,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
-	"github.com/algolia/mcp/pkg/common"
+	"github.com/algolia/mcp/pkg/mcputil"
 )
 
 func RegisterGetObject(mcps *server.MCPServer, index *search.Index) {
@@ -31,6 +31,6 @@ func RegisterGetObject(mcps *server.MCPServer, index *search.Index) {
 				fmt.Sprintf("could not get object: %v", err),
 			), nil
 		}
-		return common.JsonResponse("object", x)
+		return mcputil.JSONToolResult("object", x)
 	})
 }

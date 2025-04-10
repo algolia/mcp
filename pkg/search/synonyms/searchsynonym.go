@@ -8,7 +8,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
-	"github.com/algolia/mcp/pkg/common"
+	"github.com/algolia/mcp/pkg/mcputil"
 )
 
 func RegisterSearchSynonym(mcps *server.MCPServer, index *search.Index) {
@@ -29,6 +29,6 @@ func RegisterSearchSynonym(mcps *server.MCPServer, index *search.Index) {
 			return nil, fmt.Errorf("could not search synonyms: %w", err)
 		}
 
-		return common.JsonResponse("synonyms", resp)
+		return mcputil.JSONToolResult("synonyms", resp)
 	})
 }

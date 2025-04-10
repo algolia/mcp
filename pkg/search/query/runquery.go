@@ -11,7 +11,7 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/opt"
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
-	"github.com/algolia/mcp/pkg/common"
+	"github.com/algolia/mcp/pkg/mcputil"
 )
 
 func RegisterRunQuery(mcps *server.MCPServer, index *search.Index) {
@@ -45,6 +45,6 @@ func RegisterRunQuery(mcps *server.MCPServer, index *search.Index) {
 		}
 		log.Printf("Search for %q took %v", query, time.Since(start))
 
-		return common.JsonResponse("query results", resp)
+		return mcputil.JSONToolResult("query results", resp)
 	})
 }

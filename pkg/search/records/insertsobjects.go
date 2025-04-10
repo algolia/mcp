@@ -9,7 +9,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
-	"github.com/algolia/mcp/pkg/common"
+	"github.com/algolia/mcp/pkg/mcputil"
 )
 
 func RegisterInsertObjects(mcps *server.MCPServer, writeIndex *search.Index) {
@@ -52,6 +52,6 @@ func RegisterInsertObjects(mcps *server.MCPServer, writeIndex *search.Index) {
 			return nil, fmt.Errorf("could not save objects: %w", err)
 		}
 
-		return common.JsonResponse("batch insert result", res)
+		return mcputil.JSONToolResult("batch insert result", res)
 	})
 }
