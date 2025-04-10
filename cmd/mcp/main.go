@@ -63,7 +63,7 @@ func main() {
 	records.RegisterInsertObjects(mcps, writeIndex)
 
 	// Tools for searching
-	query.RegisterRunQuery(mcps, index)
+	query.RegisterRunQuery(mcps, client, index)
 
 	// Tools for managing rules
 	rules.RegisterSearchRules(mcps, index)
