@@ -22,6 +22,10 @@ func RegisterRunQuery(mcps *server.MCPServer, index *search.Index) {
 			mcp.Description("The query to run against the index"),
 			mcp.Required(),
 		),
+		mcp.WithString(
+			"indexName",
+			mcp.Description("The index to search into"),
+		),
 		mcp.WithNumber(
 			"hitsPerPage",
 			mcp.Description("The number of hits to return per page"),
@@ -29,16 +33,21 @@ func RegisterRunQuery(mcps *server.MCPServer, index *search.Index) {
 	)
 
 	mcps.AddTool(runQueryTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		// indexName, _ := req.Params.Arguments["index"].(string)
+		indexName, _ := req.Params.Arguments["indexName"].(string)
 		query, _ := req.Params.Arguments["query"].(string)
 
 		opts := []any{}
 		if hitsPerPage, ok := req.Params.Arguments["hitsPerPage"].(float64); ok {
 			opts = append(opts, opt.HitsPerPage(int(hitsPerPage)))
 		}
+		
+		currentIndex := index
+		if indexName != "" {
+			currentIndex = client.InitIndex(indexName)
+		}
 
 		start := time.Now()
-		resp, err := index.Search(query, opts...)
+		resp, err := currentIndex.Search(query, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("could not search: %w", err)
 		}
