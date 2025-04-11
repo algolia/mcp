@@ -12,7 +12,7 @@ import (
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterInsertObjects(mcps *server.MCPServer, writeIndex *search.Index) {
+func RegisterInsertObjects(mcps *server.MCPServer, writeClient *search.Client, writeIndex *search.Index) {
 	insertObjectsTool := mcp.NewTool(
 		"insert_objects",
 		mcp.WithDescription("Insert or update multiple objects in the Algolia index"),
@@ -21,12 +21,17 @@ func RegisterInsertObjects(mcps *server.MCPServer, writeIndex *search.Index) {
 			mcp.Description("Array of objects to insert or update as a JSON string (each must include an objectID field)"),
 			mcp.Required(),
 		),
+		mcp.WithString(
+			"indexName",
+			mcp.Description("The index to insert objects into"),
+		),
 	)
 
 	mcps.AddTool(insertObjectsTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		if writeIndex == nil {
+		if writeIndex == nil || writeClient == nil {
 			return mcp.NewToolResultError("write API key not set, cannot insert objects"), nil
 		}
+		writeIndex = mcputil.Index(writeClient, writeIndex, req)
 
 		objsStr, ok := req.Params.Arguments["objects"].(string)
 		if !ok {

@@ -12,7 +12,7 @@ import (
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterSearchRules(mcps *server.MCPServer, index *search.Index) {
+func RegisterSearchRules(mcps *server.MCPServer, client *search.Client, index *search.Index) {
 	searchRulesTool := mcp.NewTool(
 		"search_rules",
 		mcp.WithDescription("Search for rules in the Algolia index"),
@@ -34,10 +34,15 @@ func RegisterSearchRules(mcps *server.MCPServer, index *search.Index) {
 			"enabled",
 			mcp.Description("When specified, restricts matches to rules with a specific enabled status. When omitted, all enabled statuses may match."),
 		),
+		mcp.WithString(
+			"indexName",
+			mcp.Description("The index to retrieve search rules from"),
+		),
 	)
 
 	mcps.AddTool(searchRulesTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		query, _ := req.Params.Arguments["query"].(string)
+		index = mcputil.Index(client, index, req)
 
 		opts := []any{}
 		if anchoring, ok := req.Params.Arguments["anchoring"].(string); ok {
