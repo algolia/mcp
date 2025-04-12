@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/algolia/algoliasearch-client-go/v4/algolia/ingestion"
+	"github.com/algolia/mcp/pkg/connectors"
 	"log"
 	"os"
 
@@ -30,6 +32,8 @@ func main() {
 	}
 
 	algoliaWriteAPIKey = os.Getenv("ALGOLIA_WRITE_API_KEY")
+
+	algoliaAppRegion := os.Getenv("ALGOLIA_APP_REGION")
 
 	client := search.NewClient(algoliaAppID, algoliaAPIKey)
 	index := client.InitIndex(algoliaIndexName)
@@ -70,6 +74,17 @@ func main() {
 
 	// Tools for managing synonyms
 	synonyms.RegisterSearchSynonym(mcps, index)
+
+	// Connectors
+	newClient, err := ingestion.NewClient(algoliaAppID, algoliaWriteAPIKey, ingestion.Region(algoliaAppRegion))
+	if err != nil {
+		log.Fatalf("Error creating ingestion client: %v", err)
+	}
+
+	connectors.RegisterListConnectors(mcps, newClient)
+	connectors.RegisterTaskForAConnector(mcps, newClient)
+	connectors.RegisterStartTask(mcps, newClient)
+	connectors.RegisterCreateNewConnector(mcps, algoliaIndexName, algoliaWriteAPIKey, algoliaAppID, newClient)
 
 	if err := server.ServeStdio(mcps); err != nil {
 		fmt.Printf("Server error: %v\n", err)
