@@ -13,12 +13,12 @@ import (
 )
 
 func RegisterListConnectors(mcps *server.MCPServer, client *ingestion.APIClient) {
-	getObjectTool := mcp.NewTool(
+	listSourcesTool := mcp.NewTool(
 		"list_connector",
 		mcp.WithDescription("List all existing connectors"),
 	)
 
-	mcps.AddTool(getObjectTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(listSourcesTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		sources, err := client.ListSources(client.NewApiListSourcesRequest())
 		if err != nil {
 			return mcp.NewToolResultError(
@@ -31,7 +31,7 @@ func RegisterListConnectors(mcps *server.MCPServer, client *ingestion.APIClient)
 }
 
 func RegisterTaskForAConnector(mcps *server.MCPServer, client *ingestion.APIClient) {
-	getObjectTool := mcp.NewTool(
+	listTasksForAConnectorsTool := mcp.NewTool(
 		"list_tasks_for_a_connector",
 		mcp.WithDescription("List all tasks for a source or a connector"),
 		mcp.WithString(
@@ -41,7 +41,7 @@ func RegisterTaskForAConnector(mcps *server.MCPServer, client *ingestion.APIClie
 		),
 	)
 
-	mcps.AddTool(getObjectTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(listTasksForAConnectorsTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		sourceID, _ := req.Params.Arguments["source_id"].(string)
 
 		listTasks, err := client.ListTasks(client.NewApiListTasksRequest())
@@ -67,7 +67,7 @@ func RegisterTaskForAConnector(mcps *server.MCPServer, client *ingestion.APIClie
 }
 
 func RegisterStartTask(mcps *server.MCPServer, client *ingestion.APIClient) {
-	getObjectTool := mcp.NewTool(
+	startTaskTool := mcp.NewTool(
 		"start_task",
 		mcp.WithDescription("Start a task"),
 		mcp.WithString(
@@ -77,7 +77,7 @@ func RegisterStartTask(mcps *server.MCPServer, client *ingestion.APIClient) {
 		),
 	)
 
-	mcps.AddTool(getObjectTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(startTaskTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		taskID, _ := req.Params.Arguments["task_id"].(string)
 
 		task, err := client.RunTask(client.NewApiRunTaskRequest(taskID))
@@ -90,7 +90,7 @@ func RegisterStartTask(mcps *server.MCPServer, client *ingestion.APIClient) {
 }
 
 func RegisterCreateNewConnector(mcps *server.MCPServer, defaultIndex string, apiKey string, appid string, client *ingestion.APIClient) {
-	getObjectTool := mcp.NewTool(
+	createConnectorTool := mcp.NewTool(
 		"create_new_json_connector",
 		mcp.WithDescription("Create a new JSON connector"),
 		mcp.WithString(
@@ -114,7 +114,7 @@ func RegisterCreateNewConnector(mcps *server.MCPServer, defaultIndex string, api
 		),
 	)
 
-	mcps.AddTool(getObjectTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(createConnectorTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		url, _ := req.Params.Arguments["url"].(string)
 		uniqueColumnID := req.Params.Arguments["unique_column_name"].(string)
 		indexName, _ := req.Params.Arguments["index_name"].(string)

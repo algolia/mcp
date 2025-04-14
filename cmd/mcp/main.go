@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/algolia/algoliasearch-client-go/v4/algolia/ingestion"
-	"github.com/algolia/mcp/pkg/connectors"
+	"github.com/algolia/mcp/pkg/ingestion/connectors"
+	"github.com/algolia/mcp/pkg/ingestion/transformations"
 	"log"
 	"os"
 
@@ -76,15 +77,20 @@ func main() {
 	synonyms.RegisterSearchSynonym(mcps, index)
 
 	// Connectors
-	newClient, err := ingestion.NewClient(algoliaAppID, algoliaWriteAPIKey, ingestion.Region(algoliaAppRegion))
+	ingestionClient, err := ingestion.NewClient(algoliaAppID, algoliaWriteAPIKey, ingestion.Region(algoliaAppRegion))
 	if err != nil {
 		log.Fatalf("Error creating ingestion client: %v", err)
 	}
 
-	connectors.RegisterListConnectors(mcps, newClient)
-	connectors.RegisterTaskForAConnector(mcps, newClient)
-	connectors.RegisterStartTask(mcps, newClient)
-	connectors.RegisterCreateNewConnector(mcps, algoliaIndexName, algoliaWriteAPIKey, algoliaAppID, newClient)
+	connectors.RegisterListConnectors(mcps, ingestionClient)
+	connectors.RegisterTaskForAConnector(mcps, ingestionClient)
+	connectors.RegisterStartTask(mcps, ingestionClient)
+	connectors.RegisterCreateNewConnector(mcps, algoliaIndexName, algoliaWriteAPIKey, algoliaAppID, ingestionClient)
+
+	transformations.RegisterListTransformations(mcps, ingestionClient)
+	transformations.RegisterGetTransformation(mcps, ingestionClient)
+	transformations.RegisterUpdateTransformation(mcps, ingestionClient)
+	transformations.RegisterTryTransformation(mcps, ingestionClient)
 
 	if err := server.ServeStdio(mcps); err != nil {
 		fmt.Printf("Server error: %v\n", err)
