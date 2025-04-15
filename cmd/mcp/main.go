@@ -55,6 +55,7 @@ func main() {
 
 	// SEARCH TOOLS
 	// Tools for managing indices
+	indices.RegisterClear(mcps, writeIndex)
 	indices.RegisterGetSettings(mcps, index)
 
 	// Tools for managing records
