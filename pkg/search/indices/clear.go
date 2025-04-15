@@ -16,7 +16,7 @@ func RegisterClear(mcps *server.MCPServer, index *search.Index) {
 		mcp.WithDescription("Clear an index by removing all records"),
 	)
 
-	mcps.AddTool(clearIndexTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(clearIndexTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		res, err := index.ClearObjects()
 		if err != nil {
 			return mcp.NewToolResultError(
