@@ -3,6 +3,7 @@ package synonyms
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -11,7 +12,10 @@ import (
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterSearchSynonym(mcps *server.MCPServer, index *search.Index) {
+func RegisterSearchSynonym(mcps *server.MCPServer, ACL []string, index *search.Index) {
+	if slices.Index(ACL, "settings") == -1 {
+		return
+	}
 	searchSynonymTool := mcp.NewTool(
 		"search_synonyms",
 		mcp.WithDescription("Search for synonyms in the Algolia index that match a query"),

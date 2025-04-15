@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -12,7 +13,10 @@ import (
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterInsertObject(mcps *server.MCPServer, writeIndex *search.Index) {
+func RegisterInsertObject(mcps *server.MCPServer, ACL []string, index *search.Index) {
+	if slices.Index(ACL, "addObject") == -1 {
+		return
+	}
 	insertObjectTool := mcp.NewTool(
 		"insert_object",
 		mcp.WithDescription("Insert or update an object in the Algolia index"),
@@ -24,10 +28,6 @@ func RegisterInsertObject(mcps *server.MCPServer, writeIndex *search.Index) {
 	)
 
 	mcps.AddTool(insertObjectTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		if writeIndex == nil {
-			return mcp.NewToolResultError("write API key not set, cannot insert objects"), nil
-		}
-
 		objStr, ok := req.Params.Arguments["object"].(string)
 		if !ok {
 			return mcp.NewToolResultError("invalid object format, expected JSON string"), nil
@@ -45,7 +45,7 @@ func RegisterInsertObject(mcps *server.MCPServer, writeIndex *search.Index) {
 		}
 
 		// Save the object to the index
-		res, err := writeIndex.SaveObject(obj)
+		res, err := index.SaveObject(obj)
 		if err != nil {
 			return nil, fmt.Errorf("could not save object: %w", err)
 		}

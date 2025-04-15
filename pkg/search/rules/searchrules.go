@@ -3,6 +3,7 @@ package rules
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -12,7 +13,10 @@ import (
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterSearchRules(mcps *server.MCPServer, index *search.Index) {
+func RegisterSearchRules(mcps *server.MCPServer, ACL []string, index *search.Index) {
+	if slices.Index(ACL, "settings") == -1 {
+		return
+	}
 	searchRulesTool := mcp.NewTool(
 		"search_rules",
 		mcp.WithDescription("Search for rules in the Algolia index"),

@@ -3,6 +3,7 @@ package records
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -11,7 +12,10 @@ import (
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterGetObject(mcps *server.MCPServer, index *search.Index) {
+func RegisterGetObject(mcps *server.MCPServer, ACL []string, index *search.Index) {
+	if slices.Index(ACL, "search") == -1 {
+		return
+	}
 	getObjectTool := mcp.NewTool(
 		"get_object",
 		mcp.WithDescription("Get an object by its object ID"),

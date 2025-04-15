@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -14,7 +15,10 @@ import (
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterRunQuery(mcps *server.MCPServer, client *search.Client, index *search.Index) {
+func RegisterRunQuery(mcps *server.MCPServer, ACL []string, client *search.Client, index *search.Index) {
+	if slices.Index(ACL, "search") == -1 {
+		return
+	}
 	runQueryTool := mcp.NewTool(
 		"run_query",
 		mcp.WithDescription("Run a query against the Algolia search index"),
