@@ -46,8 +46,7 @@ In Claude desktop edit the settings as per https://modelcontextprotocol.io/quick
          "env": {
             "ALGOLIA_APP_ID": "<APP_ID>",
             "ALGOLIA_INDEX_NAME": "<INDEX_NAME>",
-            "ALGOLIA_API_KEY": "<API_KEY>",
-            "ALGOLIA_WRITE_API_KEY": "<ADMIN_API_KEY>"  /* if you want to allow write operations, use your ADMIN key here */
+            "ALGOLIA_API_KEY": "<API_KEY>"
          }
       }
    }
@@ -66,7 +65,6 @@ From the repo root, setup the environment
 $ export ALGOLIA_APP_ID=""
 $ export ALGOLIA_INDEX_NAME=""
 $ export ALGOLIA_API_KEY=""
-$ export ALGOLIA_WRITE_API_KEY=""  # if you want to allow write operations, use your ADMIN key here
 ```
 Move into the server directory, and rebuild (if necessary):
 ```shell

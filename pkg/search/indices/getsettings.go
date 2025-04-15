@@ -2,6 +2,7 @@ package indices
 
 import (
 	"context"
+	"slices"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -10,7 +11,10 @@ import (
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterGetSettings(mcps *server.MCPServer, index *search.Index) {
+func RegisterGetSettings(mcps *server.MCPServer, ACL []string, index *search.Index) {
+	if slices.Index(ACL, "settings") == -1 {
+		return
+	}
 	getSettingsTool := mcp.NewTool(
 		"get_settings",
 		mcp.WithDescription("Get the settings for the Algolia index"),
