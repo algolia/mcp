@@ -56,7 +56,10 @@ func main() {
 	// SEARCH TOOLS
 	// Tools for managing indices
 	indices.RegisterClear(mcps, writeIndex)
+	indices.RegisterCopy(mcps, writeClient, writeIndex)
 	indices.RegisterGetSettings(mcps, writeIndex)
+	indices.RegisterList(mcps, writeClient)
+	indices.RegisterMove(mcps, writeClient, writeIndex)
 	indices.RegisterSetSettings(mcps, writeIndex)
 
 	// Tools for managing records
