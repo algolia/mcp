@@ -2,7 +2,6 @@ package indices
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -23,7 +22,7 @@ func RegisterSetSettings(mcps *server.MCPServer, writeIndex *search.Index) {
 		),
 	)
 
-	mcps.AddTool(setSettingTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(setSettingTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		if writeIndex == nil {
 			return mcp.NewToolResultError("write API key not set, cannot insert objects"), nil
 		}
@@ -35,7 +34,7 @@ func RegisterSetSettings(mcps *server.MCPServer, writeIndex *search.Index) {
 
 		// Parse the JSON string into an object
 		var settings search.Settings
-		if err = settings.UnmarshalJSON([]byte(objStr)); err != nil {
+		if err := settings.UnmarshalJSON([]byte(objStr)); err != nil {
 			return nil, fmt.Errorf("could not parse settings: %w", err)
 		}
 
