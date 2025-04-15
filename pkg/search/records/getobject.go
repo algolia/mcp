@@ -11,7 +11,7 @@ import (
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterGetObject(mcps *server.MCPServer, index *search.Index) {
+func RegisterGetObject(mcps *server.MCPServer, client *search.Client, index *search.Index) {
 	getObjectTool := mcp.NewTool(
 		"get_object",
 		mcp.WithDescription("Get an object by its object ID"),
@@ -20,10 +20,15 @@ func RegisterGetObject(mcps *server.MCPServer, index *search.Index) {
 			mcp.Description("The object ID to look up"),
 			mcp.Required(),
 		),
+		mcp.WithString(
+			"indexName",
+			mcp.Description("The index to get the object from"),
+		),
 	)
 
 	mcps.AddTool(getObjectTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		objectID, _ := req.Params.Arguments["objectID"].(string)
+		index = mcputil.Index(client, index, req)
 
 		var x map[string]any
 		if err := index.GetObject(objectID, &x); err != nil {

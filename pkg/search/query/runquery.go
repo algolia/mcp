@@ -34,7 +34,6 @@ func RegisterRunQuery(mcps *server.MCPServer, client *search.Client, index *sear
 	)
 
 	mcps.AddTool(runQueryTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		indexName, _ := req.Params.Arguments["indexName"].(string)
 		query, _ := req.Params.Arguments["query"].(string)
 
 		opts := []any{}
@@ -42,13 +41,10 @@ func RegisterRunQuery(mcps *server.MCPServer, client *search.Client, index *sear
 			opts = append(opts, opt.HitsPerPage(int(hitsPerPage)))
 		}
 
-		currentIndex := index
-		if indexName != "" {
-			currentIndex = client.InitIndex(indexName)
-		}
+		index = mcputil.Index(client, index, req)
 
 		start := time.Now()
-		resp, err := currentIndex.Search(query, opts...)
+		resp, err := index.Search(query, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("could not search: %w", err)
 		}

@@ -55,21 +55,21 @@ func main() {
 
 	// SEARCH TOOLS
 	// Tools for managing indices
-	indices.RegisterGetSettings(mcps, index)
+	indices.RegisterGetSettings(mcps, client, index)
 
 	// Tools for managing records
-	records.RegisterGetObject(mcps, index)
-	records.RegisterInsertObject(mcps, writeIndex)
-	records.RegisterInsertObjects(mcps, writeIndex)
+	records.RegisterGetObject(mcps, client, index)
+	records.RegisterInsertObject(mcps, writeClient, writeIndex)
+	records.RegisterInsertObjects(mcps, writeClient, writeIndex)
 
 	// Tools for searching
 	query.RegisterRunQuery(mcps, client, index)
 
 	// Tools for managing rules
-	rules.RegisterSearchRules(mcps, index)
+	rules.RegisterSearchRules(mcps, client, index)
 
 	// Tools for managing synonyms
-	synonyms.RegisterSearchSynonym(mcps, index)
+	synonyms.RegisterSearchSynonym(mcps, client, index)
 
 	if err := server.ServeStdio(mcps); err != nil {
 		fmt.Printf("Server error: %v\n", err)
