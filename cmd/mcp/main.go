@@ -69,9 +69,11 @@ func main() {
 	query.RegisterRunQuery(mcps, client, index)
 
 	// Tools for managing rules
+	rules.RegisterDeleteRule(mcps, writeIndex)
 	rules.RegisterSearchRules(mcps, index)
 
 	// Tools for managing synonyms
+	synonyms.RegisterDeleteSynonym(mcps, writeIndex)
 	synonyms.RegisterSearchSynonym(mcps, index)
 
 	if err := server.ServeStdio(mcps); err != nil {
