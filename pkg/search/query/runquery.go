@@ -33,7 +33,7 @@ func RegisterRunQuery(mcps *server.MCPServer, client *search.Client, index *sear
 		),
 	)
 
-	mcps.AddTool(runQueryTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(runQueryTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		indexName, _ := req.Params.Arguments["indexName"].(string)
 		query, _ := req.Params.Arguments["query"].(string)
 
