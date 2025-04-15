@@ -106,6 +106,14 @@ $ go run github.com/mark3labs/mcphost@latest --config ~/mcp.json -m ollama:qwen2
 ```
 
 # FAQ
+### What sort of things can I do once I install this MCP?
+Here are some sample prompts to seed your imagination:
+   * “Search all products in the index where brand = ‘Nike’ and price < 100.”
+   * “Add this JSON object to the blog_posts index.”
+   * “Update the searchable attributes for the recipes index to include ingredients.”
+   * “Configure my index to rank nebula_award winners higher”
+### Where can I read more about the Algolia MCP server?
+Check out [this blog post](https://www.algolia.com/blog/engineering/algolia-mcp-server) including an embedded demo video.
+### Resource templates and root are not supported by Claude desktop right now
 
-* Resource templates and root are not supported by Claude desktop right now: https://github.com/orgs/modelcontextprotocol/discussions/136
-This is a weird one, since there is a bunch of content online showing the templates, maybe it's just not GA yet.
+[This is a weird one](https://github.com/orgs/modelcontextprotocol/discussions/136), since there is a bunch of content online showing the templates, maybe it's just not GA yet.
