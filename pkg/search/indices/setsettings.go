@@ -34,19 +34,9 @@ func RegisterSetSettings(mcps *server.MCPServer, writeIndex *search.Index) {
 		}
 
 		// Parse the JSON string into an object
-		var obj map[string]interface{}
-		if err := json.Unmarshal([]byte(objStr), &obj); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("invalid JSON: %v", err)), nil
-		}
-
-		// Convert the object to search.Settings
-		settings := search.Settings{}
-		settingsBytes, err := json.Marshal(obj)
-		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("failed to marshal settings: %v", err)), nil
-		}
-		if err := json.Unmarshal(settingsBytes, &settings); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("failed to unmarshal settings: %v", err)), nil
+		var settings search.Settings
+		if err = settings.UnmarshalJSON([]byte(objStr)); err != nil {
+			return nil, fmt.Errorf("could not parse settings: %w", err)
 		}
 
 		// Save the settings to the index
