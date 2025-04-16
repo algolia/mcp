@@ -23,17 +23,13 @@ $ git clone git@github.com:algolia/mcp.git
 $ cd mcp/cmd/mcp
 $ go build
 ```
-We need to have the full path of the built server:
+We need to have the full path of the built server binary:
 ```shell
 $ pwd
 /path/to/the/repo/cmd/mcp
 ```
-The full path to the built MCP server is:
 
-```shell
-/path/to/the/repo/cmd/mcp/mcp
-```
-_Note that there are two `/mcp`s in the path above
+__NOTE:__  When adding this command to your configuration, you must specify the binary along with the path (`/path/to/the/repo/cmd/mcp/mcp`)
 
 ### Update the settings to point to the new server
 
