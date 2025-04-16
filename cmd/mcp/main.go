@@ -72,7 +72,10 @@ func main() {
 	query.RegisterRunQuery(mcps, client, index)
 
 	// Tools for managing rules
+	rules.RegisterClearRules(mcps, writeIndex)
 	rules.RegisterDeleteRule(mcps, writeIndex)
+	rules.RegisterGetRule(mcps, index)
+	rules.RegisterInsertRule(mcps, writeIndex, algoliaAppID, algoliaWriteAPIKey)
 	rules.RegisterSearchRules(mcps, index)
 
 	// Tools for managing synonyms
