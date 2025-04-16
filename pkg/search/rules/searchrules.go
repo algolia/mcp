@@ -36,7 +36,7 @@ func RegisterSearchRules(mcps *server.MCPServer, index *search.Index) {
 		),
 	)
 
-	mcps.AddTool(searchRulesTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(searchRulesTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		query, _ := req.Params.Arguments["query"].(string)
 
 		opts := []any{}

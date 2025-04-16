@@ -56,7 +56,10 @@ func main() {
 	// SEARCH TOOLS
 	// Tools for managing indices
 	indices.RegisterClear(mcps, writeIndex)
+	indices.RegisterCopy(mcps, writeClient, writeIndex)
 	indices.RegisterGetSettings(mcps, writeIndex)
+	indices.RegisterList(mcps, writeClient)
+	indices.RegisterMove(mcps, writeClient, writeIndex)
 	indices.RegisterSetSettings(mcps, writeIndex)
 
 	// Tools for managing records
@@ -69,9 +72,11 @@ func main() {
 	query.RegisterRunQuery(mcps, client, index)
 
 	// Tools for managing rules
+	rules.RegisterDeleteRule(mcps, writeIndex)
 	rules.RegisterSearchRules(mcps, index)
 
 	// Tools for managing synonyms
+	synonyms.RegisterDeleteSynonym(mcps, writeIndex)
 	synonyms.RegisterSearchSynonym(mcps, index)
 
 	if err := server.ServeStdio(mcps); err != nil {

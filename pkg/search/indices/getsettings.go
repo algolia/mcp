@@ -16,7 +16,7 @@ func RegisterGetSettings(mcps *server.MCPServer, index *search.Index) {
 		mcp.WithDescription("Get the settings for the Algolia index"),
 	)
 
-	mcps.AddTool(getSettingsTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(getSettingsTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		settings, err := index.GetSettings()
 		if err != nil {
 			return nil, err
