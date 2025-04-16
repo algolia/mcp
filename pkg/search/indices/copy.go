@@ -13,7 +13,7 @@ import (
 func RegisterCopy(mcps *server.MCPServer, client *search.Client, index *search.Index) {
 	copyIndexTool := mcp.NewTool(
 		"copy_index",
-		mcp.WithDescription("copy an index to a another index"),
+		mcp.WithDescription("Copy an index to a another index"),
 		mcp.WithString(
 			"indexName",
 			mcp.Description("The name of the destination index"),
