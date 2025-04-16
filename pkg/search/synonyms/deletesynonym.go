@@ -22,7 +22,7 @@ func RegisterDeleteSynonym(mcps *server.MCPServer, index *search.Index) {
 		),
 	)
 
-	mcps.AddTool(DeleteSynonymTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(DeleteSynonymTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		objectID, ok := req.Params.Arguments["objectID"].(string)
 		if !ok {
 			return mcp.NewToolResultError("invalid object format, expected JSON string"), nil
