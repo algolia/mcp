@@ -13,7 +13,7 @@ import (
 func RegisterMove(mcps *server.MCPServer, client *search.Client, index *search.Index) {
 	moveIndexTool := mcp.NewTool(
 		"move_index",
-		mcp.WithDescription("move an index to a another index"),
+		mcp.WithDescription("Move an index to another index"),
 		mcp.WithString(
 			"indexName",
 			mcp.Description("The name of the destination index"),
