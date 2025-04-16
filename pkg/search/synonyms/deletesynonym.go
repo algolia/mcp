@@ -28,7 +28,7 @@ func RegisterDeleteSynonym(mcps *server.MCPServer, index *search.Index) {
 			return mcp.NewToolResultError("invalid object format, expected JSON string"), nil
 		}
 
-		resp, err := index.DeleteRule(objectID)
+		resp, err := index.DeleteSynonym(objectID)
 		if err != nil {
 			return nil, fmt.Errorf("could not delete synonyms: %w", err)
 		}

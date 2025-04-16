@@ -76,7 +76,10 @@ func main() {
 	rules.RegisterSearchRules(mcps, index)
 
 	// Tools for managing synonyms
+	synonyms.RegisterClearSynonyms(mcps, writeIndex)
 	synonyms.RegisterDeleteSynonym(mcps, writeIndex)
+	synonyms.RegisterGetSynonym(mcps, index)
+	synonyms.RegisterInsertSynonym(mcps, writeIndex, algoliaAppID, algoliaWriteAPIKey)
 	synonyms.RegisterSearchSynonym(mcps, index)
 
 	if err := server.ServeStdio(mcps); err != nil {
