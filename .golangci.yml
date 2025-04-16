@@ -1,0 +1,25 @@
+run:
+  concurrency: 4
+  timeout: 1m
+  tests: true
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - errname
+    - goconst
+    - gocritic
+    - godot
+    - gofumpt
+    - gosimple
+    - govet
+    - ineffassign
+    - makezero
+    - misspell
+    - nilerr
+    - revive
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
