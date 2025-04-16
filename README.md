@@ -33,7 +33,7 @@ The full path to the built MCP server is:
 ```shell
 /path/to/the/repo/cmd/mcp/mcp
 ```
-_Note that there is a double /mcp/mcp_
+_Note that there are two `/mcp`s in the path above
 
 ### Update the settings to point to the new server
 
