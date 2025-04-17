@@ -7,11 +7,11 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 
-	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterSearchSynonym(mcps *server.MCPServer, index *search.Index) {
+func RegisterSearchSynonym(mcps *server.MCPServer, client *search.APIClient, indexName string) {
 	searchSynonymTool := mcp.NewTool(
 		"search_synonyms",
 		mcp.WithDescription("Search for synonyms in the Algolia index that match a query"),
@@ -24,7 +24,9 @@ func RegisterSearchSynonym(mcps *server.MCPServer, index *search.Index) {
 	mcps.AddTool(searchSynonymTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		query, _ := req.Params.Arguments["query"].(string)
 
-		resp, err := index.SearchSynonyms(query)
+		resp, err := client.SearchSynonyms(client.NewApiSearchSynonymsRequest(indexName).WithSearchSynonymsParams(&search.SearchSynonymsParams{
+			Query: &query,
+		}))
 		if err != nil {
 			return nil, fmt.Errorf("could not search synonyms: %w", err)
 		}

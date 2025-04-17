@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
-func RegisterDeleteObject(mcps *server.MCPServer, index *search.Index) {
+func RegisterDeleteObject(mcps *server.MCPServer, client *search.APIClient, indexName string) {
 	deleteObjectTool := mcp.NewTool(
 		"delete_object",
 		mcp.WithDescription("Delete an object by its object ID"),
@@ -24,7 +24,7 @@ func RegisterDeleteObject(mcps *server.MCPServer, index *search.Index) {
 	mcps.AddTool(deleteObjectTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		objectID, _ := req.Params.Arguments["objectID"].(string)
 
-		res, err := index.DeleteObject(objectID)
+		res, err := client.DeleteObject(client.NewApiDeleteObjectRequest(indexName, objectID))
 		if err != nil {
 			return mcp.NewToolResultError(
 				fmt.Sprintf("could not delete object: %v", err),

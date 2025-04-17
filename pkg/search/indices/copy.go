@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
-func RegisterCopy(mcps *server.MCPServer, client *search.Client, index *search.Index) {
+func RegisterCopy(mcps *server.MCPServer, client *search.APIClient, indexName string) {
 	copyIndexTool := mcp.NewTool(
 		"copy_index",
 		mcp.WithDescription("Copy an index to a another index"),
@@ -26,8 +26,10 @@ func RegisterCopy(mcps *server.MCPServer, client *search.Client, index *search.I
 		if !ok {
 			return mcp.NewToolResultError("invalid indexName format, expected JSON string"), nil
 		}
-
-		res, err := client.CopyIndex(index.GetName(), dst)
+		res, err := client.OperationIndex(client.NewApiOperationIndexRequest(indexName, &search.OperationIndexParams{
+			Operation:   "copy",
+			Destination: dst,
+		}))
 		if err != nil {
 			return mcp.NewToolResultError(
 				fmt.Sprintf("could not copy index: %v", err),

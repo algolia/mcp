@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
-func RegisterGetSynonym(mcps *server.MCPServer, index *search.Index) {
+func RegisterGetSynonym(mcps *server.MCPServer, client *search.APIClient, indexName string) {
 	getSynonymTool := mcp.NewTool(
 		"get_synonym",
 		mcp.WithDescription("Get a synonym from the Algolia index by its ID"),
@@ -27,7 +27,7 @@ func RegisterGetSynonym(mcps *server.MCPServer, index *search.Index) {
 			return mcp.NewToolResultError("invalid objectID format"), nil
 		}
 
-		synonym, err := index.GetSynonym(objectID)
+		synonym, err := client.GetSynonym(client.NewApiGetSynonymRequest(indexName, objectID))
 		if err != nil {
 			return nil, fmt.Errorf("could not get synonym: %w", err)
 		}

@@ -7,7 +7,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/server"
 
-	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 	"github.com/algolia/mcp/pkg/search/indices"
 	"github.com/algolia/mcp/pkg/search/query"
 	"github.com/algolia/mcp/pkg/search/records"
@@ -31,18 +31,21 @@ func main() {
 
 	algoliaWriteAPIKey = os.Getenv("ALGOLIA_WRITE_API_KEY")
 
-	client := search.NewClient(algoliaAppID, algoliaAPIKey)
-	index := client.InitIndex(algoliaIndexName)
+	client, err := search.NewClient(algoliaAppID, algoliaAPIKey)
+	if err != nil {
+		log.Fatalf("Failed to create Algolia client: %v", err)
+	}
 
 	log.Printf("Algolia App ID: %q", algoliaAppID)
 	log.Printf("Algolia Index Name: %q", algoliaIndexName)
 
-	var writeClient *search.Client
-	var writeIndex *search.Index
+	var writeClient *search.APIClient
 
 	if algoliaWriteAPIKey != "" {
-		writeClient = search.NewClient(algoliaAppID, algoliaWriteAPIKey)
-		writeIndex = writeClient.InitIndex(algoliaIndexName)
+		writeClient, err = search.NewClient(algoliaAppID, algoliaWriteAPIKey)
+		if err != nil {
+			log.Fatalf("Failed to create Algolia write client: %v", err)
+		}
 		log.Printf("Heads up! This MCP has write capabilities enabled.")
 	}
 
@@ -55,32 +58,32 @@ func main() {
 
 	// SEARCH TOOLS
 	// Tools for managing indices
-	indices.RegisterClear(mcps, writeIndex)
-	indices.RegisterCopy(mcps, writeClient, writeIndex)
-	indices.RegisterGetSettings(mcps, writeIndex)
+	indices.RegisterClear(mcps, writeClient, algoliaIndexName)
+	indices.RegisterCopy(mcps, writeClient, algoliaIndexName)
+	indices.RegisterGetSettings(mcps, writeClient, algoliaIndexName)
 	indices.RegisterList(mcps, writeClient)
-	indices.RegisterMove(mcps, writeClient, writeIndex)
-	indices.RegisterSetSettings(mcps, writeIndex)
+	indices.RegisterMove(mcps, writeClient, algoliaIndexName)
+	indices.RegisterSetSettings(mcps, writeClient, algoliaIndexName)
 
 	// Tools for managing records
-	records.RegisterDeleteObject(mcps, writeIndex)
-	records.RegisterGetObject(mcps, index)
-	records.RegisterInsertObject(mcps, writeIndex)
-	records.RegisterInsertObjects(mcps, writeIndex)
+	records.RegisterDeleteObject(mcps, writeClient, algoliaIndexName)
+	records.RegisterGetObject(mcps, writeClient, algoliaIndexName)
+	records.RegisterInsertObject(mcps, writeClient, algoliaIndexName)
+	records.RegisterInsertObjects(mcps, writeClient, algoliaIndexName)
 
 	// Tools for searching
-	query.RegisterRunQuery(mcps, client, index)
+	query.RegisterRunQuery(mcps, client, algoliaIndexName)
 
 	// Tools for managing rules
-	rules.RegisterDeleteRule(mcps, writeIndex)
-	rules.RegisterSearchRules(mcps, index)
+	rules.RegisterDeleteRule(mcps, writeClient, algoliaIndexName)
+	rules.RegisterSearchRules(mcps, client, algoliaIndexName)
 
 	// Tools for managing synonyms
-	synonyms.RegisterClearSynonyms(mcps, writeIndex)
-	synonyms.RegisterDeleteSynonym(mcps, writeIndex)
-	synonyms.RegisterGetSynonym(mcps, index)
-	synonyms.RegisterInsertSynonym(mcps, writeIndex, algoliaAppID, algoliaWriteAPIKey)
-	synonyms.RegisterSearchSynonym(mcps, index)
+	synonyms.RegisterClearSynonyms(mcps, writeClient, algoliaIndexName)
+	synonyms.RegisterDeleteSynonym(mcps, writeClient, algoliaIndexName)
+	synonyms.RegisterGetSynonym(mcps, client, algoliaIndexName)
+	synonyms.RegisterInsertSynonym(mcps, writeClient, algoliaIndexName)
+	synonyms.RegisterSearchSynonym(mcps, client, algoliaIndexName)
 
 	if err := server.ServeStdio(mcps); err != nil {
 		fmt.Printf("Server error: %v\n", err)
