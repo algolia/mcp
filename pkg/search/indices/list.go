@@ -4,20 +4,20 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
-func RegisterList(mcps *server.MCPServer, client *search.Client) {
+func RegisterList(mcps *server.MCPServer, client *search.APIClient) {
 	listIndexTool := mcp.NewTool(
 		"list_indices",
 		mcp.WithDescription("List the indices in the application"),
 	)
 
 	mcps.AddTool(listIndexTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		res, err := client.ListIndices()
+		res, err := client.ListIndices(client.NewApiListIndicesRequest())
 		if err != nil {
 			return mcp.NewToolResultError(
 				fmt.Sprintf("could not list indices: %v", err),

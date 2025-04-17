@@ -7,11 +7,11 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 
-	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterDeleteSynonym(mcps *server.MCPServer, index *search.Index) {
+func RegisterDeleteSynonym(mcps *server.MCPServer, client *search.APIClient, indexName string) {
 	DeleteSynonymTool := mcp.NewTool(
 		"delete_synonym",
 		mcp.WithDescription("Delete a synonym by its object ID"),
@@ -28,7 +28,7 @@ func RegisterDeleteSynonym(mcps *server.MCPServer, index *search.Index) {
 			return mcp.NewToolResultError("invalid object format, expected JSON string"), nil
 		}
 
-		resp, err := index.DeleteSynonym(objectID)
+		resp, err := client.DeleteSynonym(client.NewApiDeleteSynonymRequest(indexName, objectID))
 		if err != nil {
 			return nil, fmt.Errorf("could not delete synonyms: %w", err)
 		}

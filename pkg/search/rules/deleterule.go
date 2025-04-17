@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
-func RegisterDeleteRule(mcps *server.MCPServer, index *search.Index) {
+func RegisterDeleteRule(mcps *server.MCPServer, client *search.APIClient, indexName string) {
 	deleteRuleTool := mcp.NewTool(
 		"delete_rule",
 		mcp.WithDescription("Delete a rule by its object ID"),
@@ -27,7 +27,7 @@ func RegisterDeleteRule(mcps *server.MCPServer, index *search.Index) {
 			return mcp.NewToolResultError("invalid object format, expected JSON string"), nil
 		}
 
-		resp, err := index.DeleteRule(objectID)
+		resp, err := client.DeleteRule(client.NewApiDeleteRuleRequest(indexName, objectID))
 		if err != nil {
 			return nil, fmt.Errorf("could not delete rule: %w", err)
 		}

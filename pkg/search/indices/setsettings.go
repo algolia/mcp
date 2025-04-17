@@ -2,16 +2,17 @@ package indices
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 
-	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterSetSettings(mcps *server.MCPServer, writeIndex *search.Index) {
+func RegisterSetSettings(mcps *server.MCPServer, client *search.APIClient, indexName string) {
 	setSettingTool := mcp.NewTool(
 		"set_settings",
 		mcp.WithDescription("Change the settings for the Algolia index"),
@@ -23,7 +24,7 @@ func RegisterSetSettings(mcps *server.MCPServer, writeIndex *search.Index) {
 	)
 
 	mcps.AddTool(setSettingTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		if writeIndex == nil {
+		if client == nil {
 			return mcp.NewToolResultError("write API key not set, cannot insert objects"), nil
 		}
 
@@ -33,13 +34,13 @@ func RegisterSetSettings(mcps *server.MCPServer, writeIndex *search.Index) {
 		}
 
 		// Parse the JSON string into an object
-		var settings search.Settings
-		if err := settings.UnmarshalJSON([]byte(objStr)); err != nil {
+		var settings *search.IndexSettings
+		if err := json.Unmarshal([]byte(objStr), &settings); err != nil {
 			return nil, fmt.Errorf("could not parse settings: %w", err)
 		}
 
 		// Save the settings to the index
-		res, err := writeIndex.SetSettings(settings)
+		res, err := client.SetSettings(client.NewApiSetSettingsRequest(indexName, settings))
 		if err != nil {
 			return nil, fmt.Errorf("could not save object: %w", err)
 		}

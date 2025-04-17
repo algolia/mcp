@@ -7,12 +7,11 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 
-	"github.com/algolia/algoliasearch-client-go/v3/algolia/opt"
-	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterSearchRules(mcps *server.MCPServer, index *search.Index) {
+func RegisterSearchRules(mcps *server.MCPServer, client *search.APIClient, indexName string) {
 	searchRulesTool := mcp.NewTool(
 		"search_rules",
 		mcp.WithDescription("Search for rules in the Algolia index"),
@@ -37,20 +36,24 @@ func RegisterSearchRules(mcps *server.MCPServer, index *search.Index) {
 	)
 
 	mcps.AddTool(searchRulesTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		query, _ := req.Params.Arguments["query"].(string)
-
-		opts := []any{}
+		var params search.SearchRulesParams
 		if anchoring, ok := req.Params.Arguments["anchoring"].(string); ok {
-			opts = append(opts, opt.Anchoring(anchoring))
+			anchoringEnum, err := search.NewAnchoringFromValue(anchoring)
+			if err != nil {
+				return nil, fmt.Errorf("invalid anchoring: %w", err)
+			}
+			params.Anchoring = anchoringEnum
 		}
 		if context, ok := req.Params.Arguments["context"].(string); ok {
-			opts = append(opts, opt.RuleContexts(context))
+			params.Context = &context
 		}
 		if enabled, ok := req.Params.Arguments["enabled"].(bool); ok {
-			opts = append(opts, opt.EnableRules(enabled))
+			params.Enabled.Set(&enabled)
 		}
+		query, _ := req.Params.Arguments["query"].(string)
+		params.Query = &query
 
-		resp, err := index.SearchRules(query, opts...)
+		resp, err := client.SearchRules(client.NewApiSearchRulesRequest(indexName).WithSearchRulesParams(&params))
 		if err != nil {
 			return nil, fmt.Errorf("could not search rules: %w", err)
 		}

@@ -8,11 +8,11 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 
-	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
 )
 
-func RegisterInsertObject(mcps *server.MCPServer, writeIndex *search.Index) {
+func RegisterInsertObject(mcps *server.MCPServer, client *search.APIClient, indexName string) {
 	insertObjectTool := mcp.NewTool(
 		"insert_object",
 		mcp.WithDescription("Insert or update an object in the Algolia index"),
@@ -24,7 +24,7 @@ func RegisterInsertObject(mcps *server.MCPServer, writeIndex *search.Index) {
 	)
 
 	mcps.AddTool(insertObjectTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		if writeIndex == nil {
+		if client == nil {
 			return mcp.NewToolResultError("write API key not set, cannot insert objects"), nil
 		}
 
@@ -45,7 +45,7 @@ func RegisterInsertObject(mcps *server.MCPServer, writeIndex *search.Index) {
 		}
 
 		// Save the object to the index
-		res, err := writeIndex.SaveObject(obj)
+		res, err := client.SaveObject(client.NewApiSaveObjectRequest(indexName, obj))
 		if err != nil {
 			return nil, fmt.Errorf("could not save object: %w", err)
 		}
