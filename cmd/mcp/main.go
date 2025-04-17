@@ -8,6 +8,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+	"github.com/algolia/mcp/pkg/search/analytics"
 	"github.com/algolia/mcp/pkg/search/indices"
 	"github.com/algolia/mcp/pkg/search/query"
 	"github.com/algolia/mcp/pkg/search/records"
@@ -81,6 +82,9 @@ func main() {
 	synonyms.RegisterGetSynonym(mcps, index)
 	synonyms.RegisterInsertSynonym(mcps, writeIndex, algoliaAppID, algoliaWriteAPIKey)
 	synonyms.RegisterSearchSynonym(mcps, index)
+
+	// Tools for analytics
+	analytics.RegisterGetAnalytics(mcps, index, algoliaAppID, algoliaAPIKey)
 
 	if err := server.ServeStdio(mcps); err != nil {
 		fmt.Printf("Server error: %v\n", err)
