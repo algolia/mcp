@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/opt"
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
-	"github.com/algolia/mcp/pkg/mcputil"
 )
 
 func RegisterRunQuery(mcps *server.MCPServer, client *search.Client, index *search.Index) {
@@ -97,6 +97,23 @@ func RegisterRunQuery(mcps *server.MCPServer, client *search.Client, index *sear
 		}
 		log.Printf("Search for %q took %v", query, time.Since(start))
 
-		return mcputil.JSONToolResult("query results", resp)
+		// Marshal the response directly to JSON
+		jsonData, err := json.Marshal(resp["hits"])
+		if err != nil {
+			return nil, fmt.Errorf("could not marshal search results to JSON: %w", err)
+		}
+
+		// Construct the result with the JSON string in the appropriate structure
+		// Assuming CallToolResult has Content []mcp.Content
+		// AND Assuming mcp.TextContent struct { Type string; Text string } implements mcp.Content
+		return &mcp.CallToolResult{
+			Content: []mcp.Content{
+				// Use mcp.TextContent struct and explicitly set Type
+				&mcp.TextContent{
+					Type: "text", // Set type explicitly
+					Text: string(jsonData),
+				},
+			},
+		}, nil
 	})
 }
