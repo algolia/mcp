@@ -97,21 +97,18 @@ func RegisterRunQuery(mcps *server.MCPServer, client *search.Client, index *sear
 		}
 		log.Printf("Search for %q took %v", query, time.Since(start))
 
-		// Marshal the response directly to JSON
-		jsonData, err := json.Marshal(resp["hits"])
+		// Marshal only the Hits field from the response
+		hitsJSONData, err := json.Marshal(resp.Hits) // Assume resp has a 'Hits' field
 		if err != nil {
-			return nil, fmt.Errorf("could not marshal search results to JSON: %w", err)
+			return nil, fmt.Errorf("could not marshal search hits to JSON: %w", err)
 		}
 
-		// Construct the result with the JSON string in the appropriate structure
-		// Assuming CallToolResult has Content []mcp.Content
-		// AND Assuming mcp.TextContent struct { Type string; Text string } implements mcp.Content
+		// Construct the result with the hits-only JSON string
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
-				// Use mcp.TextContent struct and explicitly set Type
 				&mcp.TextContent{
-					Type: "text", // Set type explicitly
-					Text: string(jsonData),
+					Type: "text",
+					Text: string(hitsJSONData), // Use the hits-only JSON
 				},
 			},
 		}, nil
