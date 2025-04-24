@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/algolia/mcp/pkg/search/stats"
 	"log"
 	"os"
 
@@ -81,6 +82,9 @@ func main() {
 	synonyms.RegisterGetSynonym(mcps, index)
 	synonyms.RegisterInsertSynonym(mcps, writeIndex, algoliaAppID, algoliaWriteAPIKey)
 	synonyms.RegisterSearchSynonym(mcps, index)
+
+	// Tools for index stats
+	stats.RegisterCountObjects(mcps, client, index)
 
 	if err := server.ServeStdio(mcps); err != nil {
 		fmt.Printf("Server error: %v\n", err)
