@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/algolia/mcp/pkg/search/stats"
 	"log"
 	"os"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/algolia/mcp/pkg/search/query"
 	"github.com/algolia/mcp/pkg/search/records"
 	"github.com/algolia/mcp/pkg/search/rules"
+	"github.com/algolia/mcp/pkg/search/stats"
 	"github.com/algolia/mcp/pkg/search/synonyms"
 )
 
