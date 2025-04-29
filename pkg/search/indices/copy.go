@@ -21,7 +21,7 @@ func RegisterCopy(mcps *server.MCPServer, client *search.Client, index *search.I
 		),
 	)
 
-	mcps.AddTool(copyIndexTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(copyIndexTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		dst, ok := req.Params.Arguments["indexName"].(string)
 		if !ok {
 			return mcp.NewToolResultError("invalid indexName format, expected JSON string"), nil

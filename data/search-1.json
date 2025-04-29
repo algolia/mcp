@@ -1,0 +1,2474 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "Search API",
+    "description": "The Algolia Search API lets you search, configure, and manage your indices and records.\n\n## Client libraries\n\nUse Algolia's API clients and libraries to reliably integrate Algolia's APIs with your apps.\nThe official API clients are covered by Algolia's [Service Level Agreement](https://www.algolia.com/policies/sla/).\n\nSee: [Algolia's ecosystem](https://www.algolia.com/doc/guides/getting-started/how-algolia-works/in-depth/ecosystem/)\n\n## Base URLs\n\nThe base URLs for requests to the Search API are:\n\n- `https://{APPLICATION_ID}.algolia.net`\n- `https://{APPLICATION_ID}-dsn.algolia.net`.\n  If your subscription includes a [Distributed Search Network](https://dashboard.algolia.com/infra),\n  this ensures that requests are sent to servers closest to users.\n\nBoth URLs provide high availability by distributing requests with load balancing.\n\n**All requests must use HTTPS.**\n\n## Retry strategy\n\nTo guarantee high availability, implement a retry strategy for all API requests using the URLs of your servers as fallbacks:\n\n- `https://{APPLICATION_ID}-1.algolianet.com`\n- `https://{APPLICATION_ID}-2.algolianet.com`\n- `https://{APPLICATION_ID}-3.algolianet.com`\n\nThese URLs use a different DNS provider than the primary URLs.\nYou should randomize this list to ensure an even load across the three servers.\n\nAll Algolia API clients implement this retry strategy.\n\n## Authentication\n\nTo authenticate your API requests, add these headers:\n\n- `x-algolia-application-id`. Your Algolia application ID.\n- `x-algolia-api-key`. An API key with the necessary permissions to make the request.\n  The required access control list (ACL) to make a request is listed in each endpoint's reference.\n\nYou can find your application ID and API key in the [Algolia dashboard](https://dashboard.algolia.com/account).\n\n## Request format\n\nDepending on the endpoint, request bodies are either JSON objects or arrays of JSON objects,\n\n## Parameters\n\nParameters are passed as query parameters for GET and DELETE requests,\nand in the request body for POST and PUT requests.\n\nQuery parameters must be [URL-encoded](https://developer.mozilla.org/en-US/docs/Glossary/Percent-encoding).\nNon-ASCII characters must be UTF-8 encoded.\nPlus characters (`+`) are interpreted as spaces.\nArrays as query parameters must be one of:\n\n- A comma-separated string: `attributesToRetrieve=title,description`\n- A URL-encoded JSON array: `attributesToRetrieve=%5B%22title%22,%22description%22%D`\n\n## Response status and errors\n\nThe Search API returns JSON responses.\nSince JSON doesn't guarantee any specific ordering, don't rely on the order of attributes in the API response.\n\nSuccessful responses return a `2xx` status. Client errors return a `4xx` status. Server errors are indicated by a `5xx` status.\nError responses have a `message` property with more information.\n\n## Version\n\nThe current version of the Search API is version 1, as indicated by the `/1/` in each endpoint's URL.\n",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://{applicationId}.algolia.net",
+      "variables": {
+        "applicationId": {
+          "default": "ALGOLIA_APPLICATION_ID"
+        }
+      }
+    },
+    {
+      "url": "https://{applicationId}-1.algolianet.com",
+      "variables": {
+        "applicationId": {
+          "default": "ALGOLIA_APPLICATION_ID"
+        }
+      }
+    },
+    {
+      "url": "https://{applicationId}-2.algolianet.com",
+      "variables": {
+        "applicationId": {
+          "default": "ALGOLIA_APPLICATION_ID"
+        }
+      }
+    },
+    {
+      "url": "https://{applicationId}-3.algolianet.com",
+      "variables": {
+        "applicationId": {
+          "default": "ALGOLIA_APPLICATION_ID"
+        }
+      }
+    },
+    {
+      "url": "https://{applicationId}-dsn.algolia.net",
+      "variables": {
+        "applicationId": {
+          "default": "ALGOLIA_APPLICATION_ID"
+        }
+      }
+    }
+  ],
+  "security": [
+    {
+      "applicationId": [],
+      "apiKey": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Advanced",
+      "description": "Query your logs."
+    },
+    {
+      "name": "Api Keys",
+      "x-displayName": "API keys",
+      "description": "Manage your API keys.\n\nAPI requests must be authenticated with an API key.\nAPI keys can have permissions (access control lists, ACL) and restrictions.\n",
+      "externalDocs": {
+        "url": "https://www.algolia.com/doc/guides/security/api-keys/",
+        "description": "Related guide: API keys.\n"
+      }
+    },
+    {
+      "name": "Clusters",
+      "description": "Multi-cluster operations.\n\nMulti-cluster operations are **deprecated**.\nIf you have issues with your Algolia infrastructure\ndue to large volumes of data, contact the Algolia support team.\n"
+    },
+    {
+      "name": "Dictionaries",
+      "description": "Manage your dictionaries.\n\nCustomize language-specific settings, such as stop words, plurals, or word segmentation.\n\nDictionaries are application-wide.\n",
+      "externalDocs": {
+        "url": "https://www.algolia.com/doc/guides/managing-results/optimize-search-results/handling-natural-languages-nlp/",
+        "description": "Related guide: Natural languages.\n"
+      }
+    },
+    {
+      "name": "Indices",
+      "description": "Manage your indices and index settings.\n\nIndices are copies of your data that are stored on Algolia's servers.\nThey're optimal data structures for fast search and are made up of records and settings.\n",
+      "externalDocs": {
+        "url": "https://www.algolia.com/doc/guides/sending-and-managing-data/manage-indices-and-apps/manage-indices/",
+        "description": "Related guide: Manage your indices.\n"
+      }
+    },
+    {
+      "name": "Records",
+      "description": "Add, update, and delete records from your indices.\n\nRecords are individual items in your index.\nWhen they match a search query, they're returned as search results, in the order determined by your ranking.\nRecords are schemaless JSON objects.\nWhen adding or updating many records, check the [indexing rate limits](https://support.algolia.com/hc/en-us/articles/4406975251089-Is-there-a-rate-limit-for-indexing-on-Algolia).\n",
+      "externalDocs": {
+        "url": "https://www.algolia.com/doc/guides/sending-and-managing-data/prepare-your-data/",
+        "description": "Related guide: Prepare your records.\n"
+      }
+    },
+    {
+      "name": "Rules",
+      "description": "Create, update, delete, and search for rules.\n\nRules are _if-then_ statements that you can use to curate search results.\nRules have _conditions_ that can trigger _consequences_.\nConsequences are changes to the search results, such as changing the order of search results or boosting a facet.\nThis can be useful for tuning specific queries or for merchandising.\n",
+      "externalDocs": {
+        "url": "https://www.algolia.com/doc/guides/managing-results/rules/rules-overview/",
+        "description": "Related guide: Rules.\n"
+      }
+    },
+    {
+      "name": "Search",
+      "description": "Search one or more indices for matching records or facet values."
+    },
+    {
+      "name": "Synonyms",
+      "description": "Create, update, delete, and search for synonyms.\n\nSynonyms are terms that the search engine should consider equal.\n",
+      "externalDocs": {
+        "url": "https://www.algolia.com/doc/guides/managing-results/optimize-search-results/adding-synonyms/",
+        "description": "Related guide: Synonyms.\n"
+      }
+    },
+    {
+      "name": "Vaults",
+      "description": "Algolia Vault lets you restrict access to your clusters to specific IP addresses and provides disk-level encryption at rest.",
+      "externalDocs": {
+        "url": "https://www.algolia.com/doc/guides/security/algolia-vault/",
+        "description": "Related guide: Algolia Vault.\n"
+      }
+    },
+    {
+      "name": "_model_index_settings",
+      "x-displayName": "Index settings",
+      "description": "<SchemaDefinition schemaRef=\"#/components/schemas/indexSettings\" />.\n"
+    }
+  ],
+  "paths": {
+    "/{path}": {
+      "get": {
+        "operationId": "customGet",
+        "summary": "Send requests to the Algolia REST API",
+        "description": "This method lets you send requests to the Algolia REST API.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PathInPath"
+          },
+          {
+            "$ref": "#/components/parameters/Parameters"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        },
+        "tags": ["search"]
+      },
+      "post": {
+        "operationId": "customPost",
+        "requestBody": {
+          "description": "Parameters to send with the custom request.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "summary": "Send requests to the Algolia REST API",
+        "description": "This method lets you send requests to the Algolia REST API.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PathInPath"
+          },
+          {
+            "$ref": "#/components/parameters/Parameters"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        },
+        "tags": ["search"]
+      },
+      "put": {
+        "operationId": "customPut",
+        "requestBody": {
+          "description": "Parameters to send with the custom request.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "summary": "Send requests to the Algolia REST API",
+        "description": "This method lets you send requests to the Algolia REST API.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PathInPath"
+          },
+          {
+            "$ref": "#/components/parameters/Parameters"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        },
+        "tags": ["search"]
+      },
+      "delete": {
+        "operationId": "customDelete",
+        "summary": "Send requests to the Algolia REST API",
+        "description": "This method lets you send requests to the Algolia REST API.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PathInPath"
+          },
+          {
+            "$ref": "#/components/parameters/Parameters"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        },
+        "tags": ["search"]
+      }
+    },
+    "/1/indexes/{indexName}/query": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "searchSingleIndex",
+        "x-use-read-transporter": true,
+        "x-cacheable": true,
+        "x-acl": ["search"],
+        "summary": "Search an index",
+        "description": "Searches a single index and returns matching search results (_hits_).\n\nThis method lets you retrieve up to 1,000 hits.\nIf you need more, use the [`browse` operation](#tag/Search/operation/browse) or increase the `paginatedLimitedTo` index setting.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/searchParams"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/searchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/*/queries": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "search",
+        "x-use-read-transporter": true,
+        "x-cacheable": true,
+        "x-legacy-signature": true,
+        "x-acl": ["search"],
+        "summary": "Search multiple indices",
+        "description": "Sends multiple search requests to one or more indices.\n\nThis can be useful in these cases:\n\n- Different indices for different purposes, such as, one index for products, another one for marketing content.\n- Multiple searches to the same index—for example, with different filters.\n",
+        "requestBody": {
+          "required": true,
+          "description": "Muli-search request body. Results are returned in the same order as the requests.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "searchMethodParams",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "requests": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/SearchQuery"
+                    }
+                  },
+                  "strategy": {
+                    "$ref": "#/components/schemas/searchStrategy"
+                  }
+                },
+                "required": ["requests"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "searchResponses",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/searchResult"
+                      }
+                    }
+                  },
+                  "required": ["results"]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/facets/{facetName}/query": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "searchForFacetValues",
+        "x-use-read-transporter": true,
+        "x-cacheable": true,
+        "x-acl": ["search"],
+        "summary": "Search for facet values",
+        "description": "Searches for values of a specified facet attribute.\n\n- By default, facet values are sorted by decreasing count.\n  You can adjust this with the `sortFacetValueBy` parameter.\n- Searching for facet values doesn't work if you have **more than 65 searchable facets and searchable attributes combined**.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "name": "facetName",
+            "description": "Facet attribute in which to search for values.\n\nThis attribute must be included in the `attributesForFaceting` index setting with the `searchable()` modifier.\n",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "searchForFacetValuesRequest",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "params": {
+                    "$ref": "#/components/schemas/paramsAsString"
+                  },
+                  "facetQuery": {
+                    "$ref": "#/components/schemas/facetQuery"
+                  },
+                  "maxFacetHits": {
+                    "$ref": "#/components/schemas/maxFacetHits"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/searchForFacetValuesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/browse": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "browse",
+        "x-use-read-transporter": true,
+        "x-acl": ["browse"],
+        "summary": "Browse for records",
+        "description": "Retrieves records from an index, up to 1,000 per request.\n\nWhile searching retrieves _hits_ (records augmented with attributes for highlighting and ranking details),\nbrowsing _just_ returns matching records.\nThis can be useful if you want to export your indices.\n\n- The Analytics API doesn't collect data when using `browse`.\n- Records are ranked by attributes and custom ranking.\n- There's no ranking for: typo-tolerance, number of matched words, proximity, geo distance.\n\nBrowse requests automatically apply these settings:\n\n- `advancedSyntax`: `false`\n- `attributesToHighlight`: `[]`\n- `attributesToSnippet`: `[]`\n- `distinct`: `false`\n- `enablePersonalization`: `false`\n- `enableRules`: `false`\n- `facets`: `[]`\n- `getRankingInfo`: `false`\n- `ignorePlurals`: `false`\n- `optionalFilters`: `[]`\n- `typoTolerance`: `true` or `false` (`min` and `strict` evaluate to `true`)\n\nIf you send these parameters with your browse requests, they'll be ignored.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/browseParams"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/browseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "saveObject",
+        "x-acl": ["addObject"],
+        "description": "Adds a record to an index or replaces it.\n\n- If the record doesn't have an object ID, a new record with an auto-generated object ID is added to your index.\n- If a record with the specified object ID exists, the existing record is replaced.\n- If a record with the specified object ID doesn't exist, a new record is added to your index.\n- If you add a record to an index that doesn't exist yet, a new index is created.\n\nTo update _some_ attributes of a record, use the [`partial` operation](#tag/Records/operation/partialUpdateObject).\nTo add, update, or replace multiple records, use the [`batch` operation](#tag/Records/operation/batch).\n\nThis operation is subject to [indexing rate limits](https://support.algolia.com/hc/en-us/articles/4406975251089-Is-there-a-rate-limit-for-indexing-on-Algolia).\n",
+        "summary": "Add a new record (with auto-generated object ID)",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "The record. A schemaless object with attributes that are useful in the context of search and discovery.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "saveObjectResponse",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "createdAt": {
+                      "$ref": "#/components/schemas/createdAt"
+                    },
+                    "taskID": {
+                      "$ref": "#/components/schemas/taskID"
+                    },
+                    "objectID": {
+                      "$ref": "#/components/schemas/objectID"
+                    }
+                  },
+                  "required": ["taskID", "createdAt"]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["search"],
+        "operationId": "deleteIndex",
+        "x-acl": ["deleteIndex"],
+        "summary": "Delete an index",
+        "description": "Deletes an index and all its settings.\n\n- Deleting an index doesn't delete its analytics data.\n- If you try to delete a non-existing index, the operation is ignored without warning.\n- If the index you want to delete has replica indices, the replicas become independent indices.\n- If the index you want to delete is a replica index, you must first unlink it from its primary index before you can delete it.\n  For more information, see [Delete replica indices](https://www.algolia.com/doc/guides/managing-results/refine-results/sorting/how-to/deleting-replicas/).\n",
+        "externalDocs": {
+          "url": "https://www.algolia.com/doc/guides/sending-and-managing-data/manage-indices-and-apps/manage-indices/how-to/delete-indices/",
+          "description": "Related guide: Delete indices.\n"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/DeletedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/{objectID}": {
+      "get": {
+        "tags": ["search"],
+        "operationId": "getObject",
+        "x-acl": ["search"],
+        "summary": "Retrieve a record",
+        "description": "Retrieves one record by its object ID.\n\nTo retrieve more than one record, use the [`objects` operation](#tag/Records/operation/getObjects).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/ObjectID"
+          },
+          {
+            "name": "attributesToRetrieve",
+            "in": "query",
+            "description": "Attributes to include with the records in the response.\nThis is useful to reduce the size of the API response.\nBy default, all retrievable attributes are returned.\n\n`objectID` is always retrieved.\n\nAttributes included in `unretrievableAttributes`\nwon't be retrieved unless the request is authenticated with the admin API key.\n",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "The requested record."
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": ["search"],
+        "operationId": "addOrUpdateObject",
+        "x-acl": ["addObject"],
+        "summary": "Add or replace a record",
+        "description": "If a record with the specified object ID exists, the existing record is replaced.\nOtherwise, a new record is added to the index.\n\nIf you want to use auto-generated object IDs, use the [`saveObject` operation](#tag/Records/operation/saveObject).\nTo update _some_ attributes of an existing record, use the [`partial` operation](#tag/Records/operation/partialUpdateObject) instead.\nTo add, update, or replace multiple records, use the [`batch` operation](#tag/Records/operation/batch).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/ObjectID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "The record. A schemaless object with attributes that are useful in the context of search and discovery.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UpdatedAtWithObjectId"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["search"],
+        "operationId": "deleteObject",
+        "x-acl": ["deleteObject"],
+        "summary": "Delete a record",
+        "description": "Deletes a record by its object ID.\n\nTo delete more than one record, use the [`batch` operation](#tag/Records/operation/batch).\nTo delete records matching a query, use the [`deleteByQuery` operation](#tag/Records/operation/deleteBy).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/ObjectID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/DeletedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/deleteByQuery": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "deleteBy",
+        "x-acl": ["deleteIndex"],
+        "summary": "Delete records matching a filter",
+        "description": "This operation doesn't accept empty filters.\n\nThis operation is resource-intensive.\nYou should only use it if you can't get the object IDs of the records you want to delete.\nIt's more efficient to get a list of object IDs with the [`browse` operation](#tag/Search/operation/browse),\nand then delete the records using the [`batch` operation](#tag/Records/operation/batch).\n\nThis operation is subject to [indexing rate limits](https://support.algolia.com/hc/en-us/articles/4406975251089-Is-there-a-rate-limit-for-indexing-on-Algolia).\n",
+        "externalDocs": {
+          "url": "https://support.algolia.com/hc/en-us/articles/16385098766353-Should-I-use-the-deleteby-method-for-deleting-records-matching-a-query-",
+          "description": "Should I use the deleteBy method for deleting records."
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/deleteByParams"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UpdatedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/clear": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "clearObjects",
+        "x-acl": ["deleteIndex"],
+        "summary": "Delete all records from an index",
+        "description": "Deletes only the records from an index while keeping settings, synonyms, and rules.\nThis operation is resource-intensive and subject to [indexing rate limits](https://support.algolia.com/hc/en-us/articles/4406975251089-Is-there-a-rate-limit-for-indexing-on-Algolia).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UpdatedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/{objectID}/partial": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "partialUpdateObject",
+        "x-acl": ["addObject"],
+        "summary": "Add or update attributes",
+        "x-codegen-request-body-name": "attributesToUpdate",
+        "description": "Adds new attributes to a record, or updates existing ones.\n\n- If a record with the specified object ID doesn't exist,\n  a new record is added to the index **if** `createIfNotExists` is true.\n- If the index doesn't exist yet, this method creates a new index.\n- You can use any first-level attribute but not nested attributes.\n  If you specify a nested attribute, this operation replaces its first-level ancestor.\n\nTo update an attribute without pushing the entire record, you can use these built-in operations.\nThese operations can be helpful if you don't have access to your initial data.\n\n- Increment: increment a numeric attribute\n- Decrement: decrement a numeric attribute\n- Add: append a number or string element to an array attribute\n- Remove: remove all matching number or string elements from an array attribute made of numbers or strings\n- AddUnique: add a number or string element to an array attribute made of numbers or strings only if it's not already present\n- IncrementFrom: increment a numeric integer attribute only if the provided value matches the current value, and otherwise ignore the whole object update. For example, if you pass an IncrementFrom value of 2 for the version attribute, but the current value of the attribute is 1, the engine ignores the update. If the object doesn't exist, the engine only creates it if you pass an IncrementFrom value of 0.\n- IncrementSet: increment a numeric integer attribute only if the provided value is greater than the current value, and otherwise ignore the whole object update. For example, if you pass an IncrementSet value of 2 for the version attribute, and the current value of the attribute is 1, the engine updates the object. If the object doesn't exist yet, the engine only creates it if you pass an IncrementSet value greater than 0.\n\nYou can specify an operation by providing an object with the attribute to update as the key and its value being an object with the following properties:\n\n- _operation: the operation to apply on the attribute\n- value: the right-hand side argument to the operation, for example, increment or decrement step, value to add or remove.\n\nWhen updating multiple attributes or using multiple operations targeting the same record, you should use a single partial update for faster processing.\n\nThis operation is subject to [indexing rate limits](https://support.algolia.com/hc/en-us/articles/4406975251089-Is-there-a-rate-limit-for-indexing-on-Algolia).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/ObjectID"
+          },
+          {
+            "name": "createIfNotExists",
+            "description": "Whether to create a new record if it doesn't exist.",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Attributes with their values.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Attributes to update.",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UpdatedAtWithObjectId"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/batch": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "batch",
+        "summary": "Batch indexing operations on one index",
+        "description": "Adds, updates, or deletes records in one index with a single API request.\n\nBatching index updates reduces latency and increases data integrity.\n\n- Actions are applied in the order they're specified.\n- Actions are equivalent to the individual API requests of the same name.\n\nThis operation is subject to [indexing rate limits](https://support.algolia.com/hc/en-us/articles/4406975251089-Is-there-a-rate-limit-for-indexing-on-Algolia).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "x-codegen-request-body-name": "batchWriteParams",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/batchWriteParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/batchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/*/batch": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "multipleBatch",
+        "description": "Adds, updates, or deletes records in multiple indices with a single API request.\n\n- Actions are applied in the order they are specified.\n- Actions are equivalent to the individual API requests of the same name.\n\nThis operation is subject to [indexing rate limits](https://support.algolia.com/hc/en-us/articles/4406975251089-Is-there-a-rate-limit-for-indexing-on-Algolia).\n",
+        "summary": "Batch indexing operations on multiple indices",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "batchParams",
+                "description": "Batch parameters.",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "requests": {
+                    "type": "array",
+                    "items": {
+                      "title": "multipleBatchRequest",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "action": {
+                          "$ref": "#/components/schemas/action"
+                        },
+                        "body": {
+                          "type": "object",
+                          "description": "Operation arguments (varies with specified `action`)."
+                        },
+                        "indexName": {
+                          "$ref": "#/components/schemas/indexName"
+                        }
+                      },
+                      "required": ["action", "indexName"]
+                    }
+                  }
+                },
+                "required": ["requests"]
+              },
+              "examples": {
+                "batch": {
+                  "summary": "Batch indexing request to two indices",
+                  "value": {
+                    "requests": [
+                      {
+                        "action": "addObject",
+                        "indexName": "contacts",
+                        "body": {
+                          "name": "Betty Jane McCamey",
+                          "company": "Vita Foods Inc.",
+                          "email": "betty@mccamey.com"
+                        }
+                      },
+                      {
+                        "action": "addObject",
+                        "indexName": "public_contacts",
+                        "body": {
+                          "name": "Gayla Geimer",
+                          "company": "Ortman McCain Co.",
+                          "email": "gayla@geimer.com"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "multipleBatchResponse",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "taskID": {
+                      "type": "object",
+                      "description": "Task IDs. One for each index.",
+                      "additionalProperties": {
+                        "$ref": "#/components/schemas/taskID"
+                      }
+                    },
+                    "objectIDs": {
+                      "$ref": "#/components/schemas/objectIDs"
+                    }
+                  },
+                  "required": ["taskID", "objectIDs"]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/*/objects": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "getObjects",
+        "x-use-read-transporter": true,
+        "x-cacheable": true,
+        "x-acl": ["search"],
+        "summary": "Retrieve records",
+        "description": "Retrieves one or more records, potentially from different indices.\n\nRecords are returned in the same order as the requests.\n",
+        "requestBody": {
+          "required": true,
+          "description": "Request object.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "getObjectsParams",
+                "description": "Request parameters.",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "requests": {
+                    "type": "array",
+                    "items": {
+                      "title": "getObjectsRequest",
+                      "description": "Request body for retrieving records.",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["objectID", "indexName"],
+                      "properties": {
+                        "attributesToRetrieve": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Attributes to retrieve.\nIf not specified, all retrievable attributes are returned.\n",
+                          "example": ["author", "title", "content"]
+                        },
+                        "objectID": {
+                          "type": "string",
+                          "description": "Object ID for the record to retrieve.",
+                          "example": "product-1"
+                        },
+                        "indexName": {
+                          "type": "string",
+                          "description": "Index from which to retrieve the records.",
+                          "example": "books"
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": ["requests"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "getObjectsResponse",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "An optional status message.",
+                      "example": "Index INDEX_NAME does not exist."
+                    },
+                    "results": {
+                      "type": "array",
+                      "description": "Retrieved records.",
+                      "items": {
+                        "type": "object",
+                        "description": "Retrieved record.",
+                        "x-is-generic": true
+                      }
+                    }
+                  },
+                  "required": ["results"]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/settings": {
+      "get": {
+        "tags": ["search"],
+        "operationId": "getSettings",
+        "x-acl": ["search"],
+        "description": "Retrieves an object with non-null index settings.",
+        "summary": "Retrieve index settings",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/settingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": ["search"],
+        "operationId": "setSettings",
+        "x-acl": ["editSettings"],
+        "description": "Update the specified index settings.\n\nIndex settings that you don't specify are left unchanged.\nSpecify `null` to reset a setting to its default value.\n\nFor best performance, update the index settings before you add new records to your index.\n",
+        "summary": "Update index settings",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/ForwardToReplicas"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/indexSettings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UpdatedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/synonyms/{objectID}": {
+      "get": {
+        "tags": ["search"],
+        "operationId": "getSynonym",
+        "x-acl": ["settings"],
+        "summary": "Retrieve a synonym",
+        "description": "Retrieves a synonym by its ID.\nTo find the object IDs for your synonyms,\nuse the [`search` operation](#tag/Synonyms/operation/searchSynonyms).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/parameters_ObjectID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/synonymHit"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": ["search"],
+        "operationId": "saveSynonym",
+        "x-acl": ["editSettings"],
+        "summary": "Create or replace a synonym",
+        "description": "If a synonym with the specified object ID doesn't exist, Algolia adds a new one.\nOtherwise, the existing synonym is replaced.\nTo add multiple synonyms in a single API request, use the [`batch` operation](#tag/Synonyms/operation/saveSynonyms).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/parameters_ObjectID"
+          },
+          {
+            "$ref": "#/components/parameters/ForwardToReplicas"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/synonymHit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "saveSynonymResponse",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "taskID": {
+                      "$ref": "#/components/schemas/taskID"
+                    },
+                    "updatedAt": {
+                      "$ref": "#/components/schemas/updatedAt"
+                    },
+                    "id": {
+                      "$ref": "#/components/schemas/id"
+                    }
+                  },
+                  "required": ["taskID", "updatedAt", "id"]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["search"],
+        "operationId": "deleteSynonym",
+        "x-acl": ["editSettings"],
+        "summary": "Delete a synonym",
+        "description": "Deletes a synonym by its ID.\nTo find the object IDs of your synonyms, use the [`search` operation](#tag/Synonyms/operation/searchSynonyms).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/parameters_ObjectID"
+          },
+          {
+            "$ref": "#/components/parameters/ForwardToReplicas"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/DeletedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/synonyms/batch": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "saveSynonyms",
+        "x-acl": ["editSettings"],
+        "summary": "Create or replace synonyms",
+        "description": "If a synonym with the `objectID` doesn't exist, Algolia adds a new one.\nOtherwise, existing synonyms are replaced.\n\nThis operation is subject to [indexing rate limits](https://support.algolia.com/hc/en-us/articles/4406975251089-Is-there-a-rate-limit-for-indexing-on-Algolia).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/ForwardToReplicas"
+          },
+          {
+            "$ref": "#/components/parameters/ReplaceExistingSynonyms"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/synonymHits"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UpdatedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/synonyms/clear": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "clearSynonyms",
+        "x-acl": ["editSettings"],
+        "summary": "Delete all synonyms",
+        "description": "Deletes all synonyms from the index.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/ForwardToReplicas"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UpdatedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/synonyms/search": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "searchSynonyms",
+        "x-use-read-transporter": true,
+        "x-cacheable": true,
+        "x-acl": ["settings"],
+        "summary": "Search for synonyms",
+        "description": "Searches for synonyms in your index.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "requestBody": {
+          "description": "Body of the `searchSynonyms` operation.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "searchSynonymsParams",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "query": {
+                    "$ref": "#/components/schemas/query"
+                  },
+                  "type": {
+                    "$ref": "#/components/schemas/SynonymType"
+                  },
+                  "page": {
+                    "$ref": "#/components/schemas/page"
+                  },
+                  "hitsPerPage": {
+                    "$ref": "#/components/schemas/hitsPerPage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/searchSynonymsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/keys": {
+      "get": {
+        "tags": ["search"],
+        "operationId": "listApiKeys",
+        "x-acl": ["admin"],
+        "summary": "List API keys",
+        "description": "Lists all API keys associated with your Algolia application, including their permissions and restrictions.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "listApiKeysResponse",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["keys"],
+                  "properties": {
+                    "keys": {
+                      "type": "array",
+                      "description": "API keys.",
+                      "items": {
+                        "$ref": "#/components/schemas/getApiKeyResponse"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      },
+      "post": {
+        "tags": ["search"],
+        "operationId": "addApiKey",
+        "x-acl": ["admin"],
+        "summary": "Create an API key",
+        "description": "Creates a new API key with specific permissions and restrictions.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiKey"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/addApiKeyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/keys/{key}": {
+      "get": {
+        "tags": ["search"],
+        "operationId": "getApiKey",
+        "summary": "Retrieve API key permissions",
+        "description": "Gets the permissions and restrictions of an API key.\n\nWhen authenticating with the admin API key, you can request information for any of your application's keys.\nWhen authenticating with other API keys, you can only retrieve information for that key,\nwith the description replaced by `<redacted>`.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/KeyString"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/getApiKeyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": ["search"],
+        "operationId": "updateApiKey",
+        "x-acl": ["admin"],
+        "summary": "Update an API key",
+        "description": "Replaces the permissions of an existing API key.\n\nAny unspecified attribute resets that attribute to its default value.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/KeyString"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiKey"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "updateApiKeyResponse",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["key", "updatedAt"],
+                  "properties": {
+                    "key": {
+                      "$ref": "#/components/schemas/keyString"
+                    },
+                    "updatedAt": {
+                      "$ref": "#/components/schemas/updatedAt"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["search"],
+        "operationId": "deleteApiKey",
+        "x-acl": ["admin"],
+        "summary": "Delete an API key",
+        "description": "Deletes the API key.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/KeyString"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "deleteApiKeyResponse",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["deletedAt"],
+                  "properties": {
+                    "deletedAt": {
+                      "$ref": "#/components/schemas/deletedAt"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/keys/{key}/restore": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "restoreApiKey",
+        "x-acl": ["admin"],
+        "summary": "Restore an API key",
+        "description": "Restores a deleted API key.\n\nRestoring resets the `validity` attribute to `0`.\n\nAlgolia stores up to 1,000 API keys per application.\nIf you create more, the oldest API keys are deleted and can't be restored.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/KeyString"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/addApiKeyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/rules/{objectID}": {
+      "get": {
+        "tags": ["search"],
+        "operationId": "getRule",
+        "x-acl": ["settings"],
+        "summary": "Retrieve a rule",
+        "description": "Retrieves a rule by its ID.\nTo find the object ID of rules, use the [`search` operation](#tag/Rules/operation/searchRules).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/ObjectIDRule"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rule"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": ["search"],
+        "operationId": "saveRule",
+        "x-acl": ["editSettings"],
+        "summary": "Create or replace a rule",
+        "description": "If a rule with the specified object ID doesn't exist, it's created.\nOtherwise, the existing rule is replaced.\n\nTo create or update more than one rule, use the [`batch` operation](#tag/Rules/operation/saveRules).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/ObjectIDRule"
+          },
+          {
+            "$ref": "#/components/parameters/ForwardToReplicas"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rule"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UpdatedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["search"],
+        "operationId": "deleteRule",
+        "x-acl": ["editSettings"],
+        "summary": "Delete a rule",
+        "description": "Deletes a rule by its ID.\nTo find the object ID for rules,\nuse the [`search` operation](#tag/Rules/operation/searchRules).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/ObjectIDRule"
+          },
+          {
+            "$ref": "#/components/parameters/ForwardToReplicas"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UpdatedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/rules/batch": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "saveRules",
+        "x-acl": ["editSettings"],
+        "summary": "Create or update rules",
+        "description": "Create or update multiple rules.\n\nIf a rule with the specified object ID doesn't exist, Algolia creates a new one.\nOtherwise, existing rules are replaced.\n\nThis operation is subject to [indexing rate limits](https://support.algolia.com/hc/en-us/articles/4406975251089-Is-there-a-rate-limit-for-indexing-on-Algolia).\n",
+        "x-codegen-request-body-name": "rules",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/ForwardToReplicas"
+          },
+          {
+            "$ref": "#/components/parameters/ClearExistingRules"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "description": "Rules to add or replace.",
+                "items": {
+                  "$ref": "#/components/schemas/rule"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UpdatedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/rules/clear": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "clearRules",
+        "x-acl": ["editSettings"],
+        "summary": "Delete all rules",
+        "description": "Deletes all rules from the index.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "$ref": "#/components/parameters/ForwardToReplicas"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UpdatedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/indexes/{indexName}/rules/search": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "searchRules",
+        "x-use-read-transporter": true,
+        "x-cacheable": true,
+        "x-acl": ["settings"],
+        "summary": "Search for rules",
+        "description": "Searches for rules in your index.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "searchRulesParams",
+                "type": "object",
+                "description": "Rules search parameters.",
+                "additionalProperties": false,
+                "properties": {
+                  "query": {
+                    "$ref": "#/components/schemas/parameters_query"
+                  },
+                  "anchoring": {
+                    "$ref": "#/components/schemas/anchoring"
+                  },
+                  "context": {
+                    "type": "string",
+                    "description": "Only return rules that match the context (exact match).",
+                    "example": "mobile"
+                  },
+                  "page": {
+                    "$ref": "#/components/schemas/parameters_page"
+                  },
+                  "hitsPerPage": {
+                    "$ref": "#/components/schemas/parameters_hitsPerPage"
+                  },
+                  "enabled": {
+                    "oneOf": [
+                      {
+                        "type": "boolean",
+                        "description": "If `true`, return only enabled rules.\nIf `false`, return only inactive rules.\nBy default, _all_ rules are returned.\n"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "searchRulesResponse",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["hits", "nbHits", "page", "nbPages"],
+                  "properties": {
+                    "hits": {
+                      "type": "array",
+                      "description": "Rules that matched the search criteria.",
+                      "items": {
+                        "$ref": "#/components/schemas/rule"
+                      }
+                    },
+                    "nbHits": {
+                      "type": "integer",
+                      "description": "Number of rules that matched the search criteria."
+                    },
+                    "page": {
+                      "type": "integer",
+                      "description": "Current page."
+                    },
+                    "nbPages": {
+                      "type": "integer",
+                      "description": "Number of pages."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/dictionaries/{dictionaryName}/batch": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "batchDictionaryEntries",
+        "x-acl": ["editSettings"],
+        "description": "Adds or deletes multiple entries from your plurals, segmentation, or stop word dictionaries.",
+        "summary": "Add or delete dictionary entries",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DictionaryName"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "batchDictionaryEntriesParams",
+                "description": "Request body for updating dictionary entries.",
+                "type": "object",
+                "required": ["requests"],
+                "additionalProperties": false,
+                "properties": {
+                  "clearExistingDictionaryEntries": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to replace all custom entries in the dictionary with the ones sent with this request."
+                  },
+                  "requests": {
+                    "type": "array",
+                    "description": "List of additions and deletions to your dictionaries.",
+                    "items": {
+                      "title": "batchDictionaryEntriesRequest",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["action", "body"],
+                      "properties": {
+                        "action": {
+                          "$ref": "#/components/schemas/dictionaryAction"
+                        },
+                        "body": {
+                          "$ref": "#/components/schemas/dictionaryEntry"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UpdatedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/dictionaries/{dictionaryName}/search": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "searchDictionaryEntries",
+        "x-use-read-transporter": true,
+        "x-cacheable": true,
+        "x-acl": ["settings"],
+        "description": "Searches for standard and custom dictionary entries.",
+        "summary": "Search dictionary entries",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DictionaryName"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "searchDictionaryEntriesParams",
+                "description": "Search parameter.",
+                "type": "object",
+                "required": ["query"],
+                "additionalProperties": false,
+                "properties": {
+                  "query": {
+                    "$ref": "#/components/schemas/query"
+                  },
+                  "page": {
+                    "$ref": "#/components/schemas/page"
+                  },
+                  "hitsPerPage": {
+                    "$ref": "#/components/schemas/hitsPerPage"
+                  },
+                  "language": {
+                    "$ref": "#/components/schemas/supportedLanguage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/searchDictionaryEntriesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/dictionaries/*/settings": {
+      "get": {
+        "tags": ["search"],
+        "operationId": "getDictionarySettings",
+        "x-acl": ["settings"],
+        "summary": "Retrieve dictionary settings",
+        "description": "Retrieves the languages for which standard dictionary entries are turned off.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "getDictionarySettingsResponse",
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["disableStandardEntries"],
+                  "properties": {
+                    "disableStandardEntries": {
+                      "$ref": "#/components/schemas/standardEntries"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": ["search"],
+        "operationId": "setDictionarySettings",
+        "x-acl": ["editSettings"],
+        "description": "Turns standard stop word dictionary entries on or off for a given language.",
+        "summary": "Update dictionary settings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "dictionarySettingsParams",
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Turn on or off the built-in Algolia stop words for a specific language.\n",
+                "required": ["disableStandardEntries"],
+                "properties": {
+                  "disableStandardEntries": {
+                    "$ref": "#/components/schemas/standardEntries"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UpdatedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/dictionaries/*/languages": {
+      "get": {
+        "tags": ["search"],
+        "operationId": "getDictionaryLanguages",
+        "x-acl": ["settings"],
+        "description": "Lists supported languages with their supported dictionary types and number of custom entries.\n",
+        "summary": "List available languages",
+        "externalDocs": {
+          "url": "https://www.algolia.com/doc/guides/managing-results/optimize-search-results/handling-natural-languages-nlp/in-depth/supported-languages/",
+          "description": "Supported languages."
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "getDictionaryLanguagesResponse",
+                  "type": "object",
+                  "additionalProperties": {
+                    "x-additionalPropertiesName": "language",
+                    "$ref": "#/components/schemas/languages"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },
+    "/1/clusters/mapping": {
+      "post": {
+        "tags": ["search"],
+        "operationId": "assignUserId",
+        "deprecated": true,
+        "x-acl": ["admin"],
+        "summary": "Assign or move a user ID",
+        "description": "Assigns or moves a user ID to a cluster.\n\nThe time it takes to move a user is proportional to the amount of data linked to the user ID.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserIDInHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "assignUserIdParams",
+                "type": "object",
+                "description": "Assign userID parameters.",
+                "additionalProperties": false,
+                "properties": {
+                  "cluster": {
+                    "$ref": "#/components/schemas/clusterName"
+                  }
+                },
+                "required": ["cluster"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CreatedAt"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      },
+      "get": {
+        "tags": ["search"],
+        "operationId": "listUserIds",
+        "deprecated": true,
+        "x-acl": ["admin"],
+        "summary": "List user IDs",
+        "description": "Lists the userIDs assigned to a multi-cluster application.\n\nSince it can take a few seconds to get the data from the different clusters,\nthe response isn't real-time.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/HitsPerPage"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "listUserIdsResponse",
+                  "type": "object",
+                  "description": "User ID data.",
+                  "properties": {
+                    "userIDs": {
+                      "type": "array",
+                      "description": "User IDs.",
+                      "items": {
+                        "$ref": "#/components/schemas/userId"
+                      }
+                    }
+                  },
+                  "required": ["userIDs"]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "402": {
+            "$ref": "#/components/responses/FeatureNotEnabled"
+          },
+          "403": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "404": {
+            "$ref": "#/components/responses/IndexNotFound"
+          }
+        }
+      }
+    },

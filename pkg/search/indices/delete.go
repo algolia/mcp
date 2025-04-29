@@ -16,7 +16,7 @@ func RegisterDelete(mcps *server.MCPServer, index *search.Index) {
 		mcp.WithDescription("Delete an index by removing all assets and configurations"),
 	)
 
-	mcps.AddTool(deleteIndexTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(deleteIndexTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		res, err := index.Delete()
 		if err != nil {
 			return mcp.NewToolResultError(

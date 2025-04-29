@@ -44,12 +44,19 @@ In Claude desktop edit the settings as per https://modelcontextprotocol.io/quick
             "ALGOLIA_APP_ID": "<APP_ID>",
             "ALGOLIA_INDEX_NAME": "<INDEX_NAME>",
             "ALGOLIA_API_KEY": "<API_KEY>",
-            "ALGOLIA_WRITE_API_KEY": "<ADMIN_API_KEY>"  /* if you want to allow write operations, use your ADMIN key here */
+            "ALGOLIA_WRITE_API_KEY": "<ADMIN_API_KEY>",  /* if you want to allow write operations, use your ADMIN key here */
+            "MCP_ENABLED_TOOLS": ""  /* optional: specify which tools to enable (e.g., "search,collections") */
          }
       }
    }
 }
 ```
+
+By default, all available tools are enabled when MCP_ENABLED_TOOLS is empty or not set. If you want to enable only specific tools, you can set this variable to a comma-separated list of tool names. Available tools are: abtesting, analytics, collections, monitoring, querysuggestions, recommend, search, search_read, search_write, usage.
+
+- `search`: Enables all search operations (both read and write)
+- `search_read`: Enables only read operations (list indices, get settings, run queries, get objects)
+- `search_write`: Enables only write operations (clear, copy, delete, move, set settings, delete objects, insert objects)
 
 Restart Claude desktop, and you should see a new `"algolia"` tool is available.
 
@@ -64,6 +71,7 @@ $ export ALGOLIA_APP_ID=""
 $ export ALGOLIA_INDEX_NAME=""
 $ export ALGOLIA_API_KEY=""
 $ export ALGOLIA_WRITE_API_KEY=""  # if you want to allow write operations, use your ADMIN key here
+$ export MCP_ENABLED_TOOLS=""  # if you want to restrict the tools activated you can optionally specify a list 
 ```
 Move into the server directory, and rebuild (if necessary):
 ```shell
@@ -91,12 +99,15 @@ As per the [README](https://github.com/mark3labs/mcphost?tab=readme-ov-file#inst
          "env": {
             "ALGOLIA_APP_ID": "<APP_ID>",
             "ALGOLIA_INDEX_NAME": "<INDEX_NAME>",
-            "ALGOLIA_API_KEY": "<API_KEY>"
+            "ALGOLIA_API_KEY": "<API_KEY>",
+            "MCP_ENABLED_TOOLS": ""  /* optional: specify which tools to enable (e.g., "search,collections") */
          }
       }
    }
 }
 ```
+
+By default, all available tools are enabled when MCP_ENABLED_TOOLS is empty or not set. If you want to enable only specific tools, you can set this variable to a comma-separated list of tool names. Available tools are: abtesting, analytics, collections, monitoring, querysuggestions, recommend, search, search_read, search_write, usage.
 You can now run it directly (no need to check out the repo):
 ```shell
 $ go run github.com/mark3labs/mcphost@latest --config ~/mcp.json -m ollama:qwen2.5:3b

@@ -16,7 +16,7 @@ func RegisterList(mcps *server.MCPServer, client *search.Client) {
 		mcp.WithDescription("List the indices in the application"),
 	)
 
-	mcps.AddTool(listIndexTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(listIndexTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		res, err := client.ListIndices()
 		if err != nil {
 			return mcp.NewToolResultError(
