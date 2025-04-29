@@ -12,6 +12,7 @@ import (
 	"github.com/algolia/mcp/pkg/search/query"
 	"github.com/algolia/mcp/pkg/search/records"
 	"github.com/algolia/mcp/pkg/search/rules"
+	"github.com/algolia/mcp/pkg/search/stats"
 	"github.com/algolia/mcp/pkg/search/synonyms"
 )
 
@@ -81,6 +82,9 @@ func main() {
 	synonyms.RegisterGetSynonym(mcps, index)
 	synonyms.RegisterInsertSynonym(mcps, writeIndex, algoliaAppID, algoliaWriteAPIKey)
 	synonyms.RegisterSearchSynonym(mcps, index)
+
+	// Tools for index stats
+	stats.RegisterCountObjects(mcps, client, index)
 
 	if err := server.ServeStdio(mcps); err != nil {
 		fmt.Printf("Server error: %v\n", err)
