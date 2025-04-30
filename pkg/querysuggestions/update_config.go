@@ -13,7 +13,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterUpdateConfig registers the update_query_suggestions_config tool with the MCP server
+// RegisterUpdateConfig registers the update_query_suggestions_config tool with the MCP server.
 func RegisterUpdateConfig(mcps *server.MCPServer) {
 	updateConfigTool := mcp.NewTool(
 		"query_suggestions_update_config",
@@ -51,7 +51,7 @@ func RegisterUpdateConfig(mcps *server.MCPServer) {
 		),
 	)
 
-	mcps.AddTool(updateConfigTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(updateConfigTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for updating configurations
 		if appID == "" || apiKey == "" {

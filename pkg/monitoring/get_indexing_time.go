@@ -11,7 +11,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetIndexingTime registers the get_indexing_time tool with the MCP server
+// RegisterGetIndexingTime registers the get_indexing_time tool with the MCP server.
 func RegisterGetIndexingTime(mcps *server.MCPServer) {
 	getIndexingTimeTool := mcp.NewTool(
 		"monitoring_get_indexing_time",
@@ -33,7 +33,7 @@ func RegisterGetIndexingTime(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := fmt.Sprintf("https://status.algolia.com/1/indexing/%s", clusters)
-		httpReq, err := http.NewRequest("GET", url, nil)
+		httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

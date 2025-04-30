@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterCommitCollection registers the commit_collection tool with the MCP server
+// RegisterCommitCollection registers the commit_collection tool with the MCP server.
 func RegisterCommitCollection(mcps *server.MCPServer) {
 	commitCollectionTool := mcp.NewTool(
 		"collections_commit_collection",

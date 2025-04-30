@@ -13,7 +13,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterListCollections registers the list_collections tool with the MCP server
+// RegisterListCollections registers the list_collections tool with the MCP server.
 func RegisterListCollections(mcps *server.MCPServer) {
 	listCollectionsTool := mcp.NewTool(
 		"collections_list_collections",
@@ -37,7 +37,7 @@ func RegisterListCollections(mcps *server.MCPServer) {
 		),
 	)
 
-	mcps.AddTool(listCollectionsTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(listCollectionsTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {

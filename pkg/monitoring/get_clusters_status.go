@@ -18,7 +18,7 @@ func RegisterGetClustersStatus(mcps *server.MCPServer) {
 		mcp.WithDescription("Retrieves the status of all Algolia clusters and instances"),
 	)
 
-	mcps.AddTool(getClustersStatusTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(getClustersStatusTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := "https://status.algolia.com/1/status"

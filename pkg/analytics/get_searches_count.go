@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetSearchesCount registers the get_searches_count tool with the MCP server
+// RegisterGetSearchesCount registers the get_searches_count tool with the MCP server.
 func RegisterGetSearchesCount(mcps *server.MCPServer) {
 	getSearchesCountTool := mcp.NewTool(
 		"analytics_get_searches_count",

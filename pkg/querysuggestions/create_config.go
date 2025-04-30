@@ -13,7 +13,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterCreateConfig registers the create_query_suggestions_config tool with the MCP server
+// RegisterCreateConfig registers the create_query_suggestions_config tool with the MCP server.
 func RegisterCreateConfig(mcps *server.MCPServer) {
 	createConfigTool := mcp.NewTool(
 		"query_suggestions_create_config",
@@ -51,7 +51,7 @@ func RegisterCreateConfig(mcps *server.MCPServer) {
 		),
 	)
 
-	mcps.AddTool(createConfigTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(createConfigTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for creating configurations
 		if appID == "" || apiKey == "" {
@@ -125,7 +125,7 @@ func RegisterCreateConfig(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := fmt.Sprintf("https://query-suggestions.%s.algolia.com/1/configs", region)
-		httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
+		httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonBody))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

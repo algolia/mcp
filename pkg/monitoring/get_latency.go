@@ -11,7 +11,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetLatency registers the get_latency tool with the MCP server
+// RegisterGetLatency registers the get_latency tool with the MCP server.
 func RegisterGetLatency(mcps *server.MCPServer) {
 	getLatencyTool := mcp.NewTool(
 		"monitoring_get_latency",
@@ -33,7 +33,7 @@ func RegisterGetLatency(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := fmt.Sprintf("https://status.algolia.com/1/latency/%s", clusters)
-		httpReq, err := http.NewRequest("GET", url, nil)
+		httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}
