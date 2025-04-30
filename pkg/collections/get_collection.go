@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetCollection registers the get_collection tool with the MCP server
+// RegisterGetCollection registers the get_collection tool with the MCP server.
 func RegisterGetCollection(mcps *server.MCPServer) {
 	getCollectionTool := mcp.NewTool(
 		"collections_get_collection",

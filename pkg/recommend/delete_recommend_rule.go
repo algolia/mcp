@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterDeleteRecommendRule registers the delete_recommend_rule tool with the MCP server
+// RegisterDeleteRecommendRule registers the delete_recommend_rule tool with the MCP server.
 func RegisterDeleteRecommendRule(mcps *server.MCPServer) {
 	deleteRecommendRuleTool := mcp.NewTool(
 		"recommend_delete_recommend_rule",

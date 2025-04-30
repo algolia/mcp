@@ -13,7 +13,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetRecommendStatus registers the get_recommend_status tool with the MCP server
+// RegisterGetRecommendStatus registers the get_recommend_status tool with the MCP server.
 func RegisterGetRecommendStatus(mcps *server.MCPServer) {
 	getRecommendStatusTool := mcp.NewTool(
 		"recommend_get_recommend_status",

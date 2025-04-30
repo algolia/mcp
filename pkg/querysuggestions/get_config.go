@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetConfig registers the get_query_suggestions_config tool with the MCP server
+// RegisterGetConfig registers the get_query_suggestions_config tool with the MCP server.
 func RegisterGetConfig(mcps *server.MCPServer) {
 	getConfigTool := mcp.NewTool(
 		"query_suggestions_get_config",

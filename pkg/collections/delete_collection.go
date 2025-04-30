@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterDeleteCollection registers the delete_collection tool with the MCP server
+// RegisterDeleteCollection registers the delete_collection tool with the MCP server.
 func RegisterDeleteCollection(mcps *server.MCPServer) {
 	deleteCollectionTool := mcp.NewTool(
 		"collections_delete_collection",

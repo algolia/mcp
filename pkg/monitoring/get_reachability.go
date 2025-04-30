@@ -11,7 +11,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetReachability registers the get_reachability tool with the MCP server
+// RegisterGetReachability registers the get_reachability tool with the MCP server.
 func RegisterGetReachability(mcps *server.MCPServer) {
 	getReachabilityTool := mcp.NewTool(
 		"monitoring_get_reachability",

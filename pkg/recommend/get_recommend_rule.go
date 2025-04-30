@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetRecommendRule registers the get_recommend_rule tool with the MCP server
+// RegisterGetRecommendRule registers the get_recommend_rule tool with the MCP server.
 func RegisterGetRecommendRule(mcps *server.MCPServer) {
 	getRecommendRuleTool := mcp.NewTool(
 		"recommend_get_recommend_rule",

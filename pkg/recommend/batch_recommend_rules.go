@@ -13,7 +13,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterBatchRecommendRules registers the batch_recommend_rules tool with the MCP server
+// RegisterBatchRecommendRules registers the batch_recommend_rules tool with the MCP server.
 func RegisterBatchRecommendRules(mcps *server.MCPServer) {
 	batchRecommendRulesTool := mcp.NewTool(
 		"recommend_batch_recommend_rules",

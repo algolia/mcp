@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetMetrics registers the get_metrics tool with the MCP server
+// RegisterGetMetrics registers the get_metrics tool with the MCP server.
 func RegisterGetMetrics(mcps *server.MCPServer) {
 	getMetricsTool := mcp.NewTool(
 		"monitoring_get_metrics",

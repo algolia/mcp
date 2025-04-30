@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetLogFile registers the get_query_suggestions_log_file tool with the MCP server
+// RegisterGetLogFile registers the get_query_suggestions_log_file tool with the MCP server.
 func RegisterGetLogFile(mcps *server.MCPServer) {
 	getLogFileTool := mcp.NewTool(
 		"query_suggestions_get_log_file",

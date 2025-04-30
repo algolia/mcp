@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterDeleteConfig registers the delete_query_suggestions_config tool with the MCP server
+// RegisterDeleteConfig registers the delete_query_suggestions_config tool with the MCP server.
 func RegisterDeleteConfig(mcps *server.MCPServer) {
 	deleteConfigTool := mcp.NewTool(
 		"query_suggestions_delete_config",

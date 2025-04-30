@@ -13,7 +13,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterSearchRecommendRules registers the search_recommend_rules tool with the MCP server
+// RegisterSearchRecommendRules registers the search_recommend_rules tool with the MCP server.
 func RegisterSearchRecommendRules(mcps *server.MCPServer) {
 	searchRecommendRulesTool := mcp.NewTool(
 		"recommend_search_recommend_rules",

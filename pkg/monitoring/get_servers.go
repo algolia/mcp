@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetServers registers the get_servers tool with the MCP server
+// RegisterGetServers registers the get_servers tool with the MCP server.
 func RegisterGetServers(mcps *server.MCPServer) {
 	getServersTool := mcp.NewTool(
 		"monitoring_get_servers",

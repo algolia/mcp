@@ -57,7 +57,7 @@ func main() {
 		searchIndex = searchClient.InitIndex("default_index")
 	}
 
-	// Register tools from enabled packages
+	// Register tools from enabled packages.
 	if enabled["abtesting"] {
 		abtesting.RegisterTools(mcps)
 	}

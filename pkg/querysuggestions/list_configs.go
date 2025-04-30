@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterListConfigs registers the list_query_suggestions_configs tool with the MCP server
+// RegisterListConfigs registers the list_query_suggestions_configs tool with the MCP server.
 func RegisterListConfigs(mcps *server.MCPServer) {
 	listConfigsTool := mcp.NewTool(
 		"query_suggestions_list_configs",
