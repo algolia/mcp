@@ -13,7 +13,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterEstimateABTest registers the estimate_abtest tool with the MCP server
+// RegisterEstimateABTest registers the estimate_abtest tool with the MCP server.
 func RegisterEstimateABTest(mcps *server.MCPServer) {
 	estimateABTestTool := mcp.NewTool(
 		"abtesting_estimate_abtest",
@@ -77,7 +77,7 @@ func RegisterEstimateABTest(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := "https://analytics.algolia.com/2/abtests/estimate"
-		httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
+		httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonBody))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

@@ -55,7 +55,7 @@ func RegisterDeleteConfig(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := fmt.Sprintf("https://query-suggestions.%s.algolia.com/1/configs/%s", region, indexName)
-		httpReq, err := http.NewRequest("DELETE", url, nil)
+		httpReq, err := http.NewRequest(http.MethodDelete, url, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

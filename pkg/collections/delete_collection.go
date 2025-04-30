@@ -40,7 +40,7 @@ func RegisterDeleteCollection(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := fmt.Sprintf("https://experiences.algolia.com/1/collections/%s", id)
-		httpReq, err := http.NewRequest("DELETE", url, nil)
+		httpReq, err := http.NewRequest(http.MethodDelete, url, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

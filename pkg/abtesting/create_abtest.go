@@ -13,7 +13,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterCreateABTest registers the create_abtest tool with the MCP server
+// RegisterCreateABTest registers the create_abtest tool with the MCP server.
 func RegisterCreateABTest(mcps *server.MCPServer) {
 	createABTestTool := mcp.NewTool(
 		"abtesting_create_abtest",
@@ -73,7 +73,7 @@ func RegisterCreateABTest(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := "https://analytics.algolia.com/2/abtests"
-		httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
+		httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonBody))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

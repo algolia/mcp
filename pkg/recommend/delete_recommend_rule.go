@@ -60,7 +60,7 @@ func RegisterDeleteRecommendRule(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := fmt.Sprintf("https://%s.algolia.net/1/indexes/%s/%s/recommend/rules/%s", appID, indexName, model, objectID)
-		httpReq, err := http.NewRequest("DELETE", url, nil)
+		httpReq, err := http.NewRequest(http.MethodDelete, url, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

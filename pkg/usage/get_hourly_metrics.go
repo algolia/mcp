@@ -71,7 +71,7 @@ func RegisterGetHourlyMetrics(mcps *server.MCPServer) {
 
 		// Create HTTP client and request
 		client := &http.Client{}
-		baseURL := fmt.Sprintf("https://usage.algolia.com/2/metrics/hourly")
+		baseURL := "https://usage.algolia.com/2/metrics/hourly"
 
 		// Add query parameters
 		params := url.Values{}

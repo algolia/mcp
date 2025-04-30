@@ -124,7 +124,7 @@ func RegisterUpdateConfig(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := fmt.Sprintf("https://query-suggestions.%s.algolia.com/1/configs/%s", region, indexName)
-		httpReq, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonBody))
+		httpReq, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonBody))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

@@ -11,7 +11,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterDeleteABTest registers the delete_abtest tool with the MCP server
+// RegisterDeleteABTest registers the delete_abtest tool with the MCP server.
 func RegisterDeleteABTest(mcps *server.MCPServer) {
 	deleteABTestTool := mcp.NewTool(
 		"abtesting_delete_abtest",
