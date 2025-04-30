@@ -1,10 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
+	"strconv"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/abtesting"
@@ -93,7 +99,63 @@ func main() {
 
 	// Start the MCP server
 	fmt.Println("Starting MCP server...")
-	if err := server.ServeStdio(mcps); err != nil {
-		log.Fatalf("MCP server failed: %v", err)
+
+	// Check server type from environment variable (defaults to "stdio" if not set)
+	serverType := strings.ToLower(strings.TrimSpace(os.Getenv("MCP_SERVER_TYPE")))
+
+	// Start the appropriate server type
+	if serverType == "sse" {
+		// Get port from environment variable or use default
+		portStr := os.Getenv("MCP_SSE_PORT")
+		port := 8080 // Default port
+		if portStr != "" {
+			if p, err := strconv.Atoi(portStr); err == nil {
+				port = p
+			} else {
+				fmt.Printf("Warning: Invalid MCP_SSE_PORT value '%s', using default port 8080\n", portStr)
+			}
+		}
+
+		// Create the address string (e.g., ":8080")
+		addr := fmt.Sprintf(":%d", port)
+		fmt.Printf("Starting SSE server on port %d...\n", port)
+
+		// Create the SSE server
+		sseServer := server.NewSSEServer(mcps)
+
+		// Set up signal handling for graceful shutdown
+		signalChan := make(chan os.Signal, 1)
+		signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
+
+		// Start server in a goroutine
+		go func() {
+			if err := sseServer.Start(addr); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("MCP server failed: %v", err)
+			}
+		}()
+
+		// Wait for shutdown signal
+		sig := <-signalChan
+		fmt.Printf("Received signal %v, shutting down gracefully...\n", sig)
+
+		// Use the server's shutdown method with a timeout context
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		if err := sseServer.Shutdown(shutdownCtx); err != nil {
+			log.Fatalf("Server shutdown failed: %v", err)
+		}
+
+		fmt.Println("Server gracefully stopped")
+	} else {
+		// Default to stdio server
+		if serverType != "" && serverType != "stdio" {
+			fmt.Printf("Warning: Unknown server type '%s', defaulting to stdio\n", serverType)
+		}
+
+		fmt.Println("Starting stdio server...")
+		if err := server.ServeStdio(mcps); err != nil {
+			log.Fatalf("MCP server failed: %v", err)
+		}
 	}
 }

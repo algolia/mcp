@@ -45,7 +45,9 @@ In Claude desktop edit the settings as per https://modelcontextprotocol.io/quick
             "ALGOLIA_INDEX_NAME": "<INDEX_NAME>",
             "ALGOLIA_API_KEY": "<API_KEY>",
             "ALGOLIA_WRITE_API_KEY": "<ADMIN_API_KEY>",  /* if you want to allow write operations, use your ADMIN key here */
-            "MCP_ENABLED_TOOLS": ""  /* optional: specify which tools to enable (e.g., "search,collections") */
+            "MCP_ENABLED_TOOLS": "",  /* optional: specify which tools to enable (e.g., "search,collections") */
+            "MCP_SERVER_TYPE": "stdio",  /* optional: server type, either "stdio" (default) or "sse". If not set, defaults to "stdio" */
+            "MCP_SSE_PORT": "8080"  /* optional: port for SSE server, default is 8080 (only used when MCP_SERVER_TYPE is "sse") */
          }
       }
    }
@@ -71,7 +73,9 @@ $ export ALGOLIA_APP_ID=""
 $ export ALGOLIA_INDEX_NAME=""
 $ export ALGOLIA_API_KEY=""
 $ export ALGOLIA_WRITE_API_KEY=""  # if you want to allow write operations, use your ADMIN key here
-$ export MCP_ENABLED_TOOLS=""  # if you want to restrict the tools activated you can optionally specify a list 
+$ export MCP_ENABLED_TOOLS=""  # if you want to restrict the tools activated you can optionally specify a list
+$ export MCP_SERVER_TYPE="stdio"  # optional: server type, either "stdio" (default) or "sse". If not set, defaults to "stdio"
+$ export MCP_SSE_PORT="8080"  # optional: port for SSE server, default is 8080 (only used when MCP_SERVER_TYPE is "sse")
 ```
 Move into the server directory, and rebuild (if necessary):
 ```shell
@@ -100,7 +104,9 @@ As per the [README](https://github.com/mark3labs/mcphost?tab=readme-ov-file#inst
             "ALGOLIA_APP_ID": "<APP_ID>",
             "ALGOLIA_INDEX_NAME": "<INDEX_NAME>",
             "ALGOLIA_API_KEY": "<API_KEY>",
-            "MCP_ENABLED_TOOLS": ""  /* optional: specify which tools to enable (e.g., "search,collections") */
+            "MCP_ENABLED_TOOLS": "",  /* optional: specify which tools to enable (e.g., "search,collections") */
+            "MCP_SERVER_TYPE": "stdio",  /* optional: server type, either "stdio" (default) or "sse". If not set, defaults to "stdio" */
+            "MCP_SSE_PORT": "8080"  /* optional: port for SSE server, default is 8080 (only used when MCP_SERVER_TYPE is "sse") */
          }
       }
    }
