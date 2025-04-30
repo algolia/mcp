@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterListABTests registers the list_abtests tool with the MCP server
+// RegisterListABTests registers the list_abtests tool with the MCP server.
 func RegisterListABTests(mcps *server.MCPServer) {
 	listABTestsTool := mcp.NewTool(
 		"abtesting_list_abtests",

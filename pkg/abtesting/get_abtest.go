@@ -11,7 +11,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetABTest registers the get_abtest tool with the MCP server
+// RegisterGetABTest registers the get_abtest tool with the MCP server.
 func RegisterGetABTest(mcps *server.MCPServer) {
 	getABTestTool := mcp.NewTool(
 		"abtesting_get_abtest",

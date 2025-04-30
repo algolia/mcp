@@ -13,7 +13,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterScheduleABTest registers the schedule_abtest tool with the MCP server
+// RegisterScheduleABTest registers the schedule_abtest tool with the MCP server.
 func RegisterScheduleABTest(mcps *server.MCPServer) {
 	scheduleABTestTool := mcp.NewTool(
 		"abtesting_schedule_abtest",

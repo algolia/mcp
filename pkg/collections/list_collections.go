@@ -53,7 +53,7 @@ func RegisterListCollections(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := "https://experiences.algolia.com/1/collections"
-		httpReq, err := http.NewRequest("GET", url, nil)
+		httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

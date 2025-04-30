@@ -24,7 +24,7 @@ func RegisterCommitCollection(mcps *server.MCPServer) {
 		),
 	)
 
-	mcps.AddTool(commitCollectionTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(commitCollectionTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for committing collections
 		if appID == "" || apiKey == "" {
@@ -40,7 +40,7 @@ func RegisterCommitCollection(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := fmt.Sprintf("https://experiences.algolia.com/1/collections/%s/commit", id)
-		httpReq, err := http.NewRequest("POST", url, nil)
+		httpReq, err := http.NewRequest(http.MethodPost, url, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}
