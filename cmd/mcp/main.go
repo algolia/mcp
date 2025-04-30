@@ -149,9 +149,15 @@ func main() {
 
 		// Use the server's shutdown method with a timeout context
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
 
-		if err := sseServer.Shutdown(shutdownCtx); err != nil {
+		// Attempt to shut down the server
+		err := sseServer.Shutdown(shutdownCtx)
+
+		// Always cancel the context to prevent resource leaks
+		cancel()
+
+		// Check for shutdown errors after ensuring context is canceled
+		if err != nil {
 			log.Fatalf("Server shutdown failed: %v", err)
 		}
 

@@ -16,7 +16,7 @@ func RegisterClearSynonyms(mcps *server.MCPServer, writeIndex *search.Index) {
 		mcp.WithDescription("Clear all synonyms from the Algolia index"),
 	)
 
-	mcps.AddTool(clearSynonymsTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(clearSynonymsTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		if writeIndex == nil {
 			return mcp.NewToolResultError("write API key not set, cannot clear synonyms"), nil
 		}
