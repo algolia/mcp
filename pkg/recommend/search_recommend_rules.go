@@ -54,7 +54,7 @@ func RegisterSearchRecommendRules(mcps *server.MCPServer) {
 		),
 	)
 
-	mcps.AddTool(searchRecommendRulesTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(searchRecommendRulesTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -108,7 +108,7 @@ func RegisterSearchRecommendRules(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := fmt.Sprintf("https://%s.algolia.net/1/indexes/%s/%s/recommend/rules/search", appID, indexName, model)
-		httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
+		httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonBody))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

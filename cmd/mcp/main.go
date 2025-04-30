@@ -128,15 +128,24 @@ func main() {
 		signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
 		// Start server in a goroutine
+		serverErrCh := make(chan error, 1)
 		go func() {
 			if err := sseServer.Start(addr); err != nil && err != http.ErrServerClosed {
-				log.Fatalf("MCP server failed: %v", err)
+				serverErrCh <- fmt.Errorf("MCP server failed: %v", err)
+				return
 			}
+			serverErrCh <- nil
 		}()
 
-		// Wait for shutdown signal
-		sig := <-signalChan
-		fmt.Printf("Received signal %v, shutting down gracefully...\n", sig)
+		// Wait for either a shutdown signal or a server error
+		select {
+		case sig := <-signalChan:
+			fmt.Printf("Received signal %v, shutting down gracefully...\n", sig)
+		case err := <-serverErrCh:
+			if err != nil {
+				log.Fatalf("Server error: %v", err)
+			}
+		}
 
 		// Use the server's shutdown method with a timeout context
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

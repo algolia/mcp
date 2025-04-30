@@ -23,7 +23,7 @@ func RegisterGetReachability(mcps *server.MCPServer) {
 		),
 	)
 
-	mcps.AddTool(getReachabilityTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(getReachabilityTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		// Extract parameters
 		clusters, _ := req.Params.Arguments["clusters"].(string)
 		if clusters == "" {
@@ -33,7 +33,7 @@ func RegisterGetReachability(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := fmt.Sprintf("https://status.algolia.com/1/reachability/%s/probes", clusters)
-		httpReq, err := http.NewRequest("GET", url, nil)
+		httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}
