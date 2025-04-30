@@ -14,7 +14,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetDailyMetrics registers the get_daily_metrics tool with the MCP server
+// RegisterGetDailyMetrics registers the get_daily_metrics tool with the MCP server.
 func RegisterGetDailyMetrics(mcps *server.MCPServer) {
 	getDailyMetricsTool := mcp.NewTool(
 		"usage_get_daily_metrics",
@@ -40,7 +40,7 @@ func RegisterGetDailyMetrics(mcps *server.MCPServer) {
 		),
 	)
 
-	mcps.AddTool(getDailyMetricsTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(getDailyMetricsTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -93,7 +93,7 @@ func RegisterGetDailyMetrics(mcps *server.MCPServer) {
 		}
 		url := fmt.Sprintf("%s?%s", baseURL, params.Encode())
 
-		httpReq, err := http.NewRequest("GET", url, nil)
+		httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

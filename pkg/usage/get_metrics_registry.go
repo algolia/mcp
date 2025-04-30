@@ -14,7 +14,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetMetricsRegistry registers the get_metrics_registry tool with the MCP server
+// RegisterGetMetricsRegistry registers the get_metrics_registry tool with the MCP server.
 func RegisterGetMetricsRegistry(mcps *server.MCPServer) {
 	getMetricsRegistryTool := mcp.NewTool(
 		"usage_get_metrics_registry",
@@ -26,7 +26,7 @@ func RegisterGetMetricsRegistry(mcps *server.MCPServer) {
 		),
 	)
 
-	mcps.AddTool(getMetricsRegistryTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(getMetricsRegistryTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -56,7 +56,7 @@ func RegisterGetMetricsRegistry(mcps *server.MCPServer) {
 		}
 		url := fmt.Sprintf("%s?%s", baseURL, params.Encode())
 
-		httpReq, err := http.NewRequest("GET", url, nil)
+		httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

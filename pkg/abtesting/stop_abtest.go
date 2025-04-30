@@ -11,7 +11,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterStopABTest registers the stop_abtest tool with the MCP server
+// RegisterStopABTest registers the stop_abtest tool with the MCP server.
 func RegisterStopABTest(mcps *server.MCPServer) {
 	stopABTestTool := mcp.NewTool(
 		"abtesting_stop_abtest",

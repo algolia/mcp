@@ -11,7 +11,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetClusterStatus registers the get_cluster_status tool with the MCP server
+// RegisterGetClusterStatus registers the get_cluster_status tool with the MCP server.
 func RegisterGetClusterStatus(mcps *server.MCPServer) {
 	getClusterStatusTool := mcp.NewTool(
 		"monitoring_get_cluster_status",
@@ -23,7 +23,7 @@ func RegisterGetClusterStatus(mcps *server.MCPServer) {
 		),
 	)
 
-	mcps.AddTool(getClusterStatusTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(getClusterStatusTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		// Extract parameters
 		clusters, _ := req.Params.Arguments["clusters"].(string)
 		if clusters == "" {
@@ -33,7 +33,7 @@ func RegisterGetClusterStatus(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := fmt.Sprintf("https://status.algolia.com/1/status/%s", clusters)
-		httpReq, err := http.NewRequest("GET", url, nil)
+		httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

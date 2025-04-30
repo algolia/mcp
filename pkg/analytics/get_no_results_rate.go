@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetNoResultsRate registers the get_no_results_rate tool with the MCP server
+// RegisterGetNoResultsRate registers the get_no_results_rate tool with the MCP server.
 func RegisterGetNoResultsRate(mcps *server.MCPServer) {
 	getNoResultsRateTool := mcp.NewTool(
 		"analytics_get_no_results_rate",

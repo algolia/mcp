@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetClickThroughRate registers the get_click_through_rate tool with the MCP server
+// RegisterGetClickThroughRate registers the get_click_through_rate tool with the MCP server.
 func RegisterGetClickThroughRate(mcps *server.MCPServer) {
 	getClickThroughRateTool := mcp.NewTool(
 		"analytics_get_click_through_rate",

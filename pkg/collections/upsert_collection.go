@@ -13,7 +13,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterUpsertCollection registers the upsert_collection tool with the MCP server
+// RegisterUpsertCollection registers the upsert_collection tool with the MCP server.
 func RegisterUpsertCollection(mcps *server.MCPServer) {
 	upsertCollectionTool := mcp.NewTool(
 		"collections_upsert_collection",
@@ -50,7 +50,7 @@ func RegisterUpsertCollection(mcps *server.MCPServer) {
 		),
 	)
 
-	mcps.AddTool(upsertCollectionTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(upsertCollectionTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for creating/updating collections
 		if appID == "" || apiKey == "" {
@@ -119,7 +119,7 @@ func RegisterUpsertCollection(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := "https://experiences.algolia.com/1/collections"
-		httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
+		httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonBody))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}

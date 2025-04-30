@@ -11,7 +11,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// RegisterGetClusterIncidents registers the get_cluster_incidents tool with the MCP server
+// RegisterGetClusterIncidents registers the get_cluster_incidents tool with the MCP server.
 func RegisterGetClusterIncidents(mcps *server.MCPServer) {
 	getClusterIncidentsTool := mcp.NewTool(
 		"monitoring_get_cluster_incidents",
@@ -33,7 +33,7 @@ func RegisterGetClusterIncidents(mcps *server.MCPServer) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := fmt.Sprintf("https://status.algolia.com/1/incidents/%s", clusters)
-		httpReq, err := http.NewRequest("GET", url, nil)
+		httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}
