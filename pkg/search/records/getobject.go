@@ -22,7 +22,7 @@ func RegisterGetObject(mcps *server.MCPServer, index *search.Index) {
 		),
 	)
 
-	mcps.AddTool(getObjectTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(getObjectTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		objectID, _ := req.Params.Arguments["objectID"].(string)
 
 		var x map[string]any

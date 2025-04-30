@@ -21,7 +21,7 @@ func RegisterMove(mcps *server.MCPServer, client *search.Client, index *search.I
 		),
 	)
 
-	mcps.AddTool(moveIndexTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(moveIndexTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		dst, ok := req.Params.Arguments["indexName"].(string)
 		if !ok {
 			return mcp.NewToolResultError("invalid indexName format, expected JSON string"), nil

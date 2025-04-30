@@ -34,7 +34,7 @@ func RegisterInsertSynonym(mcps *server.MCPServer, index *search.Index, appID, a
 		),
 	)
 
-	mcps.AddTool(insertSynonymTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(insertSynonymTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		indexName := index.GetName()
 		objectID, ok := req.Params.Arguments["objectID"].(string)
 		if !ok {

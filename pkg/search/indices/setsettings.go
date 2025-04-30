@@ -22,7 +22,7 @@ func RegisterSetSettings(mcps *server.MCPServer, writeIndex *search.Index) {
 		),
 	)
 
-	mcps.AddTool(setSettingTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(setSettingTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		if writeIndex == nil {
 			return mcp.NewToolResultError("write API key not set, cannot insert objects"), nil
 		}

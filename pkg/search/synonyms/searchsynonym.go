@@ -21,7 +21,7 @@ func RegisterSearchSynonym(mcps *server.MCPServer, index *search.Index) {
 		),
 	)
 
-	mcps.AddTool(searchSynonymTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(searchSynonymTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		query, _ := req.Params.Arguments["query"].(string)
 
 		resp, err := index.SearchSynonyms(query)

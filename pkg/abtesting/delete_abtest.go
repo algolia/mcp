@@ -23,7 +23,7 @@ func RegisterDeleteABTest(mcps *server.MCPServer) {
 		),
 	)
 
-	mcps.AddTool(deleteABTestTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(deleteABTestTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for deleting AB tests
 		if appID == "" || apiKey == "" {

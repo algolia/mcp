@@ -23,7 +23,7 @@ func RegisterInsertObjects(mcps *server.MCPServer, writeIndex *search.Index) {
 		),
 	)
 
-	mcps.AddTool(insertObjectsTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(insertObjectsTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		if writeIndex == nil {
 			return mcp.NewToolResultError("write API key not set, cannot insert objects"), nil
 		}

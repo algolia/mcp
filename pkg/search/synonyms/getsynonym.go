@@ -21,7 +21,7 @@ func RegisterGetSynonym(mcps *server.MCPServer, index *search.Index) {
 		),
 	)
 
-	mcps.AddTool(getSynonymTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mcps.AddTool(getSynonymTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		objectID, ok := req.Params.Arguments["objectID"].(string)
 		if !ok {
 			return mcp.NewToolResultError("invalid objectID format"), nil
