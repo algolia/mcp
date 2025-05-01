@@ -27,7 +27,7 @@ import (
 
 func main() {
 	// Create a new MCP server with name and version
-	mcps := server.NewMCPServer("Algolia MCP", "0.0.2")
+	mcps := server.NewMCPServer("Algolia MCP", "0.0.2", server.WithResourceCapabilities(true, true))
 
 	// Parse MCP_ENABLED_TOOLS environment variable to determine which toolsets to enable
 	enabledToolsEnv := os.Getenv("MCP_ENABLED_TOOLS")
@@ -59,8 +59,18 @@ func main() {
 	var searchClient *search.Client
 	var searchIndex *search.Index
 	if enabled["search"] || enabled["search_read"] || enabled["search_write"] {
-		searchClient = search.NewClient("", "")
-		searchIndex = searchClient.InitIndex("default_index")
+		// Get Algolia credentials from environment variables
+		appID := os.Getenv("ALGOLIA_APP_ID")
+		apiKey := os.Getenv("ALGOLIA_API_KEY")
+		indexName := os.Getenv("ALGOLIA_INDEX_NAME")
+
+		// Use default index name if not provided
+		if indexName == "" {
+			indexName = "default_index"
+		}
+
+		searchClient = search.NewClient(appID, apiKey)
+		searchIndex = searchClient.InitIndex(indexName)
 	}
 
 	// Register tools from enabled packages.
@@ -97,8 +107,11 @@ func main() {
 		usage.RegisterAll(mcps)
 	}
 
-	// Start the MCP server
-	fmt.Println("Starting MCP server...")
+	// Create a logger that writes to stderr instead of stdout
+	logger := log.New(os.Stderr, "", log.LstdFlags)
+
+	// Log to stderr to avoid interfering with JSON-RPC communication
+	logger.Println("Starting MCP server...")
 
 	// Check server type from environment variable (defaults to "stdio" if not set)
 	serverType := strings.ToLower(strings.TrimSpace(os.Getenv("MCP_SERVER_TYPE")))
@@ -112,13 +125,13 @@ func main() {
 			if p, err := strconv.Atoi(portStr); err == nil {
 				port = p
 			} else {
-				fmt.Printf("Warning: Invalid MCP_SSE_PORT value '%s', using default port 8080\n", portStr)
+				logger.Printf("Warning: Invalid MCP_SSE_PORT value '%s', using default port 8080", portStr)
 			}
 		}
 
 		// Create the address string (e.g., ":8080")
 		addr := fmt.Sprintf(":%d", port)
-		fmt.Printf("Starting SSE server on port %d...\n", port)
+		logger.Printf("Starting SSE server on port %d...", port)
 
 		// Create the SSE server
 		sseServer := server.NewSSEServer(mcps)
@@ -140,10 +153,10 @@ func main() {
 		// Wait for either a shutdown signal or a server error
 		select {
 		case sig := <-signalChan:
-			fmt.Printf("Received signal %v, shutting down gracefully...\n", sig)
+			logger.Printf("Received signal %v, shutting down gracefully...", sig)
 		case err := <-serverErrCh:
 			if err != nil {
-				log.Fatalf("Server error: %v", err)
+				logger.Fatalf("Server error: %v", err)
 			}
 		}
 
@@ -158,19 +171,22 @@ func main() {
 
 		// Check for shutdown errors after ensuring context is canceled
 		if err != nil {
-			log.Fatalf("Server shutdown failed: %v", err)
+			logger.Fatalf("Server shutdown failed: %v", err)
 		}
 
-		fmt.Println("Server gracefully stopped")
+		logger.Println("Server gracefully stopped")
 	} else {
 		// Default to stdio server
 		if serverType != "" && serverType != "stdio" {
-			fmt.Printf("Warning: Unknown server type '%s', defaulting to stdio\n", serverType)
+			logger.Printf("Warning: Unknown server type '%s', defaulting to stdio", serverType)
 		}
 
-		fmt.Println("Starting stdio server...")
-		if err := server.ServeStdio(mcps); err != nil {
-			log.Fatalf("MCP server failed: %v", err)
+		// Log to stderr to avoid interfering with JSON-RPC communication
+		logger.Println("Starting stdio server...")
+
+		// Use the same logger for error logging in the stdio server
+		if err := server.ServeStdio(mcps, server.WithErrorLogger(logger)); err != nil {
+			logger.Fatalf("MCP server failed: %v", err)
 		}
 	}
 }
