@@ -27,7 +27,7 @@ import (
 
 func main() {
 	// Create a new MCP server with name and version
-	mcps := server.NewMCPServer("Algolia MCP", "0.0.2", server.WithResourceCapabilities(true, true))
+	mcps := server.NewMCPServer("Algolia MCP", "0.0.2")
 
 	// Parse MCP_ENABLED_TOOLS environment variable to determine which toolsets to enable
 	enabledToolsEnv := os.Getenv("MCP_ENABLED_TOOLS")
@@ -36,42 +36,33 @@ func main() {
 
 	// If MCP_ENABLED_TOOLS is set, enable only the specified toolsets
 	// Otherwise, enable all toolsets
-	if enabledToolsEnv != "" {
-		for _, toolName := range strings.Split(enabledToolsEnv, ",") {
-			trimmedName := strings.ToLower(strings.TrimSpace(toolName))
-			for _, knownTool := range allTools {
-				if trimmedName == knownTool {
-					enabled[trimmedName] = true
-					break
-				}
-			}
-		}
-	} else {
+	if enabledToolsEnv == "" {
 		for _, toolName := range allTools {
-			// Don't enable search_read and search_write by default if search is enabled
-			if toolName != "search_read" && toolName != "search_write" {
-				enabled[toolName] = true
+			enabled[toolName] = true
+		}
+	}
+
+	for _, toolName := range strings.Split(enabledToolsEnv, ",") {
+		trimmedName := strings.ToLower(strings.TrimSpace(toolName))
+		for _, knownTool := range allTools {
+			if trimmedName == knownTool {
+				enabled[trimmedName] = true
+				break
 			}
 		}
 	}
 
-	// Initialize Algolia client for search tools if any search-related tool is enabled
+	// Initialize Algolia client
 	var searchClient *search.Client
 	var searchIndex *search.Index
-	if enabled["search"] || enabled["search_read"] || enabled["search_write"] {
-		// Get Algolia credentials from environment variables
-		appID := os.Getenv("ALGOLIA_APP_ID")
-		apiKey := os.Getenv("ALGOLIA_API_KEY")
-		indexName := os.Getenv("ALGOLIA_INDEX_NAME")
 
-		// Use default index name if not provided
-		if indexName == "" {
-			indexName = "default_index"
-		}
+	// Get Algolia credentials from environment variables
+	appID := os.Getenv("ALGOLIA_APP_ID")
+	apiKey := os.Getenv("ALGOLIA_API_KEY")
+	indexName := os.Getenv("ALGOLIA_INDEX_NAME")
 
-		searchClient = search.NewClient(appID, apiKey)
-		searchIndex = searchClient.InitIndex(indexName)
-	}
+	searchClient = search.NewClient(appID, apiKey)
+	searchIndex = searchClient.InitIndex(indexName)
 
 	// Register tools from enabled packages.
 	if enabled["abtesting"] {
