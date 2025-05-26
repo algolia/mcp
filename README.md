@@ -16,23 +16,6 @@ Requirements:
 
 * Go (https://go.dev/doc/install)
 
-### Clone the repo and build the server
-
-Clone the repo, amd build the mcp server:
-
-```shell
-$ git clone git@github.com:algolia/mcp.git
-$ cd mcp/cmd/mcp
-$ go build
-```
-We need to have the full path of the built server binary:
-```shell
-$ pwd
-/path/to/the/repo/cmd/mcp
-```
-
-__NOTE:__  When adding this command to your configuration, you must specify the binary along with the path (`/path/to/the/repo/cmd/mcp/mcp`)
-
 ### Update the settings to point to the new server
 
 In Claude desktop edit the settings as per https://modelcontextprotocol.io/quickstart/user#2-add-the-filesystem-mcp-server and this time add the server definition for algolia (using the server path that you found earlier).
@@ -41,7 +24,11 @@ In Claude desktop edit the settings as per https://modelcontextprotocol.io/quick
 {
    "mcpServers": {
       "algolia": {
-         "command": "/path/to/the/repo/cmd/mcp/mcp",
+         "command": "go",
+         "args": [
+           "run",
+           "github.com/algolia/mcp@latest"
+         ]
          "env": {
             "ALGOLIA_APP_ID": "<APP_ID>",
             "ALGOLIA_INDEX_NAME": "<INDEX_NAME>",
