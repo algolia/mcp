@@ -21,6 +21,7 @@ import (
 	"github.com/algolia/mcp/pkg/recommend"
 	searchpkg "github.com/algolia/mcp/pkg/search"
 	"github.com/algolia/mcp/pkg/usage"
+	"github.com/algolia/mcp/pkg/mcputil/client"
 
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -52,17 +53,12 @@ func main() {
 		}
 	}
 
+
 	// Initialize Algolia client
 	var searchClient *search.Client
 	var searchIndex *search.Index
 
-	// Get Algolia credentials from environment variables
-	appID := os.Getenv("ALGOLIA_APP_ID")
-	apiKey := os.Getenv("ALGOLIA_API_KEY")
-	indexName := os.Getenv("ALGOLIA_INDEX_NAME")
-
-	searchClient = search.NewClient(appID, apiKey)
-	searchIndex = searchClient.InitIndex(indexName)
+	searchClient, searchIndex := client.clientInstance()
 
 	// Register tools from enabled packages.
 	if enabled["abtesting"] {
@@ -84,7 +80,7 @@ func main() {
 		recommend.RegisterAll(mcps)
 	}
 	if enabled["search"] {
-		searchpkg.RegisterAll(mcps)
+		searchpkg.RegisterAll(mcps, searchClient, searchIndex)
 	} else {
 		// Only register specific search tools if "search" is not enabled
 		if enabled["search_read"] {

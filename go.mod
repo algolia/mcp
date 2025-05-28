@@ -1,5 +1,7 @@
 module github.com/algolia/mcp
 
+replace github.com/algolia/mcp => github.com/acarbone/algolia-mcp v0.0.1
+
 go 1.24.1
 
 require (
