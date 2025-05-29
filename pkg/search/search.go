@@ -6,18 +6,19 @@ import (
 	"github.com/algolia/mcp/pkg/search/query"
 	"github.com/algolia/mcp/pkg/search/records"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/algolia/mcp/pkg/mcputil/client"
 )
 
 // RegisterAll registers all Search tools with the MCP server (both read and write).
 func RegisterAll(mcps *server.MCPServer) {
-	// Initialize Algolia client.
-	// Note: In a real implementation, you would get the app ID and API key from environment variables.
-	client := search.NewClient("", "")
-	index := client.InitIndex("default_index")
+	var searchClient *search.Client
+	var searchIndex *search.Index
+
+	searchClient, searchIndex := client.clientInstance()
 
 	// Register both read and write operations.
-	RegisterReadAll(mcps, client, index)
-	RegisterWriteAll(mcps, client, index)
+	RegisterReadAll(mcps, searchClient, searchIndex)
+	RegisterWriteAll(mcps, searchClient, searchIndex)
 }
 
 // RegisterReadAll registers read-only Search tools with the MCP server.
