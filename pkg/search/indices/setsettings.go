@@ -4,32 +4,33 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
-
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func RegisterSetSettings(mcps *server.MCPServer, writeIndex *search.Index) {
-	setSettingTool := mcp.NewTool(
-		"set_settings",
-		mcp.WithDescription("Change the settings for the Algolia index"),
-		mcp.WithString(
-			"object",
-			mcp.Description("The object to insert or update as a JSON string"),
-			mcp.Required(),
-		),
-	)
+// SetSettingsParams defines the parameters for setting index settings.
+type SetSettingsParams struct {
+	Object string `json:"object" jsonschema:"The settings object as a JSON string"`
+}
 
-	mcps.AddTool(setSettingTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func RegisterSetSettings(mcps *mcp.Server, writeIndex *search.Index) {
+	schema, _ := jsonschema.For[SetSettingsParams]()
+	setSettingTool := &mcp.Tool{
+		Name:        "set_settings",
+		Description: "Change the settings for the Algolia index",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, setSettingTool, func(_ context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[SetSettingsParams]) (*mcp.CallToolResultFor[any], error) {
 		if writeIndex == nil {
-			return mcp.NewToolResultError("write API key not set, cannot insert objects"), nil
+			return nil, fmt.Errorf("write API key not set, cannot insert objects")
 		}
 
-		objStr, ok := req.Params.Arguments["object"].(string)
-		if !ok {
-			return mcp.NewToolResultError("invalid object format, expected JSON string"), nil
+		objStr := params.Arguments.Object
+		if objStr == "" {
+			return nil, fmt.Errorf("invalid object format, expected JSON string")
 		}
 
 		// Parse the JSON string into an object

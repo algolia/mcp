@@ -5,43 +5,44 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
-
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func RegisterInsertObject(mcps *server.MCPServer, writeIndex *search.Index) {
-	insertObjectTool := mcp.NewTool(
-		"insert_object",
-		mcp.WithDescription("Insert or update an object in the Algolia index"),
-		mcp.WithString(
-			"object",
-			mcp.Description("The object to insert or update as a JSON string (must include an objectID field)"),
-			mcp.Required(),
-		),
-	)
+// InsertObjectParams defines the parameters for inserting an object.
+type InsertObjectParams struct {
+	Object string `json:"object" jsonschema:"The object to insert or update as a JSON string (must include an objectID field)"`
+}
 
-	mcps.AddTool(insertObjectTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func RegisterInsertObject(mcps *mcp.Server, writeIndex *search.Index) {
+	schema, _ := jsonschema.For[InsertObjectParams]()
+	insertObjectTool := &mcp.Tool{
+		Name:        "insert_object",
+		Description: "Insert or update an object in the Algolia index",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, insertObjectTool, func(_ context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[InsertObjectParams]) (*mcp.CallToolResultFor[any], error) {
 		if writeIndex == nil {
-			return mcp.NewToolResultError("write API key not set, cannot insert objects"), nil
+			return nil, fmt.Errorf("write API key not set, cannot insert objects")
 		}
 
-		objStr, ok := req.Params.Arguments["object"].(string)
-		if !ok {
-			return mcp.NewToolResultError("invalid object format, expected JSON string"), nil
+		objStr := params.Arguments.Object
+		if objStr == "" {
+			return nil, fmt.Errorf("invalid object format, expected JSON string")
 		}
 
 		// Parse the JSON string into an object
 		var obj map[string]interface{}
 		if err := json.Unmarshal([]byte(objStr), &obj); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("invalid JSON: %v", err)), nil
+			return nil, fmt.Errorf("invalid JSON: %v", err)
 		}
 
 		// Check if objectID is provided
 		if _, exists := obj["objectID"]; !exists {
-			return mcp.NewToolResultError("object must include an objectID field"), nil
+			return nil, fmt.Errorf("object must include an objectID field")
 		}
 
 		// Save the object to the index

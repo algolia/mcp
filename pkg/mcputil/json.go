@@ -4,35 +4,34 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // JSONToolResult is a convenience method that creates a named JSON-encoded MCP tool result
 // from a Go value.
-func JSONToolResult(name string, x any) (*mcp.CallToolResult, error) {
+func JSONToolResult(name string, x any) (*mcp.CallToolResultFor[any], error) {
 	b, err := json.Marshal(x)
 	if err != nil {
 		return nil, fmt.Errorf("could not marshal response: %w", err)
 	}
-	return mcp.NewToolResultResource(
-		name,
-		mcp.TextResourceContents{
-			MIMEType: "application/json",
-			Text:     string(b),
+	return &mcp.CallToolResultFor[any]{
+		Content: []mcp.Content{
+			&mcp.TextContent{
+				Text: fmt.Sprintf("%s: %s", name, string(b)),
+			},
 		},
-	), nil
+	}, nil
 }
 
 // JSONResource is a convenience method that creates a JSON-encoded MCP resource.
-func JSONResource(x any) ([]mcp.ResourceContents, error) {
+func JSONResource(x any) ([]mcp.Content, error) {
 	b, err := json.Marshal(x)
 	if err != nil {
 		return nil, fmt.Errorf("could not marshal response: %w", err)
 	}
-	return []mcp.ResourceContents{
-		mcp.TextResourceContents{
-			MIMEType: "application/json",
-			Text:     string(b),
+	return []mcp.Content{
+		&mcp.TextContent{
+			Text: string(b),
 		},
 	}, nil
 }

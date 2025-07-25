@@ -6,22 +6,25 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func RegisterClear(mcps *server.MCPServer, index *search.Index) {
-	clearIndexTool := mcp.NewTool(
-		"clear_index",
-		mcp.WithDescription("Clear an index by removing all records"),
-	)
+// ClearIndexParams defines the parameters for clearing an index.
+type ClearIndexParams struct{}
 
-	mcps.AddTool(clearIndexTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func RegisterClear(mcps *mcp.Server, index *search.Index) {
+	schema, _ := jsonschema.For[ClearIndexParams]()
+	clearIndexTool := &mcp.Tool{
+		Name:        "clear_index",
+		Description: "Clear an index by removing all records",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, clearIndexTool, func(_ context.Context, _ *mcp.ServerSession, _ *mcp.CallToolParamsFor[ClearIndexParams]) (*mcp.CallToolResultFor[any], error) {
 		res, err := index.ClearObjects()
 		if err != nil {
-			return mcp.NewToolResultError(
-				fmt.Sprintf("could not clear index: %v", err),
-			), nil
+			return nil, fmt.Errorf("could not clear index: %v", err)
 		}
 		return mcputil.JSONToolResult("object", res)
 	})

@@ -6,26 +6,27 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetReachability registers the get_reachability tool with the MCP server.
-func RegisterGetReachability(mcps *server.MCPServer) {
-	getReachabilityTool := mcp.NewTool(
-		"monitoring_get_reachability",
-		mcp.WithDescription("Test whether clusters are reachable or not"),
-		mcp.WithString(
-			"clusters",
-			mcp.Description("Subset of clusters, separated by commas (e.g., c1-de,c2-de,c3-de)"),
-			mcp.Required(),
-		),
-	)
+// GetReachabilityParams defines the parameters for retrieving reachability.
+type GetReachabilityParams struct {
+	Clusters string `json:"clusters" jsonschema:"Subset of clusters, separated by commas (e.g., c1-de,c2-de,c3-de)"`
+}
 
-	mcps.AddTool(getReachabilityTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetReachability registers the get_reachability tool with the MCP server.
+func RegisterGetReachability(s *mcp.Server) {
+	schema, _ := jsonschema.For[GetReachabilityParams]()
+	getReachabilityTool := &mcp.Tool{
+		Name:        "monitoring_get_reachability",
+		Description: "Test whether clusters are reachable or not",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(s, getReachabilityTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetReachabilityParams]) (*mcp.CallToolResultFor[any], error) {
 		// Extract parameters
-		clusters, _ := req.Params.Arguments["clusters"].(string)
+		clusters := params.Arguments.Clusters
 		if clusters == "" {
 			return nil, fmt.Errorf("clusters parameter is required")
 		}
@@ -63,6 +64,12 @@ func RegisterGetReachability(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Reachability", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Reachability: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

@@ -6,29 +6,29 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func RegisterDeleteObject(mcps *server.MCPServer, index *search.Index) {
-	deleteObjectTool := mcp.NewTool(
-		"delete_object",
-		mcp.WithDescription("Delete an object by its object ID"),
-		mcp.WithString(
-			"objectID",
-			mcp.Description("The object ID to delete"),
-			mcp.Required(),
-		),
-	)
+// DeleteObjectParams defines the parameters for deleting an object.
+type DeleteObjectParams struct {
+	ObjectID string `json:"objectID" jsonschema:"The object ID to delete"`
+}
 
-	mcps.AddTool(deleteObjectTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		objectID, _ := req.Params.Arguments["objectID"].(string)
+func RegisterDeleteObject(mcps *mcp.Server, index *search.Index) {
+	schema, _ := jsonschema.For[DeleteObjectParams]()
+	deleteObjectTool := &mcp.Tool{
+		Name:        "delete_object",
+		Description: "Delete an object by its object ID",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, deleteObjectTool, func(_ context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[DeleteObjectParams]) (*mcp.CallToolResultFor[any], error) {
+		objectID := params.Arguments.ObjectID
 
 		res, err := index.DeleteObject(objectID)
 		if err != nil {
-			return mcp.NewToolResultError(
-				fmt.Sprintf("could not delete object: %v", err),
-			), nil
+			return nil, fmt.Errorf("could not delete object: %v", err)
 		}
 		return mcputil.JSONToolResult("object", res)
 	})

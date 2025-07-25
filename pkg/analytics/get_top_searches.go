@@ -8,60 +8,34 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetTopSearches registers the get_top_searches tool with the MCP server.
-func RegisterGetTopSearches(mcps *server.MCPServer) {
-	getTopSearchesTool := mcp.NewTool(
-		"analytics_get_top_searches",
-		mcp.WithDescription("Retrieve the most popular searches for an index"),
-		mcp.WithString(
-			"index",
-			mcp.Description("Index name"),
-			mcp.Required(),
-		),
-		mcp.WithBoolean(
-			"clickAnalytics",
-			mcp.Description("Whether to include metrics related to click and conversion events in the response"),
-		),
-		mcp.WithBoolean(
-			"revenueAnalytics",
-			mcp.Description("Whether to include metrics related to revenue events in the response"),
-		),
-		mcp.WithString(
-			"startDate",
-			mcp.Description("Start date of the period to analyze, in YYYY-MM-DD format"),
-		),
-		mcp.WithString(
-			"endDate",
-			mcp.Description("End date of the period to analyze, in YYYY-MM-DD format"),
-		),
-		mcp.WithString(
-			"orderBy",
-			mcp.Description("Attribute by which to order the response items (searchCount, clickThroughRate, conversionRate, averageClickPosition)"),
-		),
-		mcp.WithString(
-			"direction",
-			mcp.Description("Sorting direction of the results: asc or desc"),
-		),
-		mcp.WithNumber(
-			"limit",
-			mcp.Description("Number of items to return (max 1000)"),
-		),
-		mcp.WithNumber(
-			"offset",
-			mcp.Description("Position of the first item to return"),
-		),
-		mcp.WithString(
-			"tags",
-			mcp.Description("Tags by which to segment the analytics"),
-		),
-	)
+// GetTopSearchesParams defines the parameters for retrieving top searches.
+type GetTopSearchesParams struct {
+	Index            string  `json:"index" jsonschema:"Index name"`
+	ClickAnalytics   *bool   `json:"clickAnalytics,omitempty" jsonschema:"Whether to include metrics related to click and conversion events in the response"`
+	RevenueAnalytics *bool   `json:"revenueAnalytics,omitempty" jsonschema:"Whether to include metrics related to revenue events in the response"`
+	StartDate        string  `json:"startDate,omitempty" jsonschema:"Start date of the period to analyze, in YYYY-MM-DD format"`
+	EndDate          string  `json:"endDate,omitempty" jsonschema:"End date of the period to analyze, in YYYY-MM-DD format"`
+	OrderBy          string  `json:"orderBy,omitempty" jsonschema:"Attribute by which to order the response items (searchCount, clickThroughRate, conversionRate, averageClickPosition)"`
+	Direction        string  `json:"direction,omitempty" jsonschema:"Sorting direction of the results: asc or desc"`
+	Limit            *int    `json:"limit,omitempty" jsonschema:"Number of items to return (max 1000)"`
+	Offset           *int    `json:"offset,omitempty" jsonschema:"Position of the first item to return"`
+	Tags             string  `json:"tags,omitempty" jsonschema:"Tags by which to segment the analytics"`
+}
 
-	mcps.AddTool(getTopSearchesTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetTopSearches registers the get_top_searches tool with the MCP server.
+func RegisterGetTopSearches(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[GetTopSearchesParams]()
+	getTopSearchesTool := &mcp.Tool{
+		Name:        "analytics_get_top_searches",
+		Description: "Retrieve the most popular searches for an index",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getTopSearchesTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetTopSearchesParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -69,7 +43,7 @@ func RegisterGetTopSearches(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		index, _ := req.Params.Arguments["index"].(string)
+		index := params.Arguments.Index
 		if index == "" {
 			return nil, fmt.Errorf("index parameter is required")
 		}
@@ -91,40 +65,40 @@ func RegisterGetTopSearches(mcps *server.MCPServer) {
 		q := httpReq.URL.Query()
 		q.Add("index", index)
 
-		if clickAnalytics, ok := req.Params.Arguments["clickAnalytics"].(bool); ok && clickAnalytics {
+		if params.Arguments.ClickAnalytics != nil && *params.Arguments.ClickAnalytics {
 			q.Add("clickAnalytics", "true")
 		}
 
-		if revenueAnalytics, ok := req.Params.Arguments["revenueAnalytics"].(bool); ok && revenueAnalytics {
+		if params.Arguments.RevenueAnalytics != nil && *params.Arguments.RevenueAnalytics {
 			q.Add("revenueAnalytics", "true")
 		}
 
-		if startDate, ok := req.Params.Arguments["startDate"].(string); ok && startDate != "" {
-			q.Add("startDate", startDate)
+		if params.Arguments.StartDate != "" {
+			q.Add("startDate", params.Arguments.StartDate)
 		}
 
-		if endDate, ok := req.Params.Arguments["endDate"].(string); ok && endDate != "" {
-			q.Add("endDate", endDate)
+		if params.Arguments.EndDate != "" {
+			q.Add("endDate", params.Arguments.EndDate)
 		}
 
-		if orderBy, ok := req.Params.Arguments["orderBy"].(string); ok && orderBy != "" {
-			q.Add("orderBy", orderBy)
+		if params.Arguments.OrderBy != "" {
+			q.Add("orderBy", params.Arguments.OrderBy)
 		}
 
-		if direction, ok := req.Params.Arguments["direction"].(string); ok && direction != "" {
-			q.Add("direction", direction)
+		if params.Arguments.Direction != "" {
+			q.Add("direction", params.Arguments.Direction)
 		}
 
-		if limit, ok := req.Params.Arguments["limit"].(float64); ok {
-			q.Add("limit", strconv.FormatInt(int64(limit), 10))
+		if params.Arguments.Limit != nil {
+			q.Add("limit", strconv.Itoa(*params.Arguments.Limit))
 		}
 
-		if offset, ok := req.Params.Arguments["offset"].(float64); ok {
-			q.Add("offset", strconv.FormatInt(int64(offset), 10))
+		if params.Arguments.Offset != nil {
+			q.Add("offset", strconv.Itoa(*params.Arguments.Offset))
 		}
 
-		if tags, ok := req.Params.Arguments["tags"].(string); ok && tags != "" {
-			q.Add("tags", tags)
+		if params.Arguments.Tags != "" {
+			q.Add("tags", params.Arguments.Tags)
 		}
 
 		httpReq.URL.RawQuery = q.Encode()
@@ -151,6 +125,12 @@ func RegisterGetTopSearches(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Top Searches", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Top Searches: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

@@ -6,32 +6,32 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func RegisterCopy(mcps *server.MCPServer, client *search.Client, index *search.Index) {
-	copyIndexTool := mcp.NewTool(
-		"copy_index",
-		mcp.WithDescription("Copy an index to a another index"),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("The name of the destination index"),
-			mcp.Required(),
-		),
-	)
+// CopyIndexParams defines the parameters for copying an index.
+type CopyIndexParams struct {
+	IndexName string `json:"indexName" jsonschema:"The name of the destination index"`
+}
 
-	mcps.AddTool(copyIndexTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		dst, ok := req.Params.Arguments["indexName"].(string)
-		if !ok {
-			return mcp.NewToolResultError("invalid indexName format, expected JSON string"), nil
+func RegisterCopy(mcps *mcp.Server, client *search.Client, index *search.Index) {
+	schema, _ := jsonschema.For[CopyIndexParams]()
+	copyIndexTool := &mcp.Tool{
+		Name:        "copy_index",
+		Description: "Copy an index to a another index",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, copyIndexTool, func(_ context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[CopyIndexParams]) (*mcp.CallToolResultFor[any], error) {
+		dst := params.Arguments.IndexName
+		if dst == "" {
+			return nil, fmt.Errorf("invalid indexName format, expected non-empty string")
 		}
 
 		res, err := client.CopyIndex(index.GetName(), dst)
 		if err != nil {
-			return mcp.NewToolResultError(
-				fmt.Sprintf("could not copy index: %v", err),
-			), nil
+			return nil, fmt.Errorf("could not copy index: %v", err)
 		}
 		return mcputil.JSONToolResult("task", res)
 	})

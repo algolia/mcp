@@ -6,32 +6,32 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func RegisterMove(mcps *server.MCPServer, client *search.Client, index *search.Index) {
-	moveIndexTool := mcp.NewTool(
-		"move_index",
-		mcp.WithDescription("Move an index to another index"),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("The name of the destination index"),
-			mcp.Required(),
-		),
-	)
+// MoveIndexParams defines the parameters for moving an index.
+type MoveIndexParams struct {
+	IndexName string `json:"indexName" jsonschema:"The name of the destination index"`
+}
 
-	mcps.AddTool(moveIndexTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		dst, ok := req.Params.Arguments["indexName"].(string)
-		if !ok {
-			return mcp.NewToolResultError("invalid indexName format, expected JSON string"), nil
+func RegisterMove(mcps *mcp.Server, client *search.Client, index *search.Index) {
+	schema, _ := jsonschema.For[MoveIndexParams]()
+	moveIndexTool := &mcp.Tool{
+		Name:        "move_index",
+		Description: "Move an index to another index",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, moveIndexTool, func(_ context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[MoveIndexParams]) (*mcp.CallToolResultFor[any], error) {
+		dst := params.Arguments.IndexName
+		if dst == "" {
+			return nil, fmt.Errorf("invalid indexName format, expected non-empty string")
 		}
 
 		res, err := client.CopyIndex(index.GetName(), dst)
 		if err != nil {
-			return mcp.NewToolResultError(
-				fmt.Sprintf("could not move index: %v", err),
-			), nil
+			return nil, fmt.Errorf("could not move index: %v", err)
 		}
 		return mcputil.JSONToolResult("task", res)
 	})

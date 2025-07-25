@@ -7,19 +7,23 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetServers registers the get_servers tool with the MCP server.
-func RegisterGetServers(mcps *server.MCPServer) {
-	getServersTool := mcp.NewTool(
-		"monitoring_get_servers",
-		mcp.WithDescription("Retrieves the servers that belong to clusters"),
-	)
+// GetServersParams defines the parameters for retrieving servers.
+type GetServersParams struct{}
 
-	mcps.AddTool(getServersTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetServers registers the get_servers tool with the MCP server.
+func RegisterGetServers(s *mcp.Server) {
+	schema, _ := jsonschema.For[GetServersParams]()
+	getServersTool := &mcp.Tool{
+		Name:        "monitoring_get_servers",
+		Description: "Retrieves the servers that belong to clusters",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(s, getServersTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetServersParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -61,6 +65,12 @@ func RegisterGetServers(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Servers", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Servers: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

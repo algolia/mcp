@@ -3,20 +3,24 @@ package indices
 import (
 	"context"
 
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
-
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func RegisterGetSettings(mcps *server.MCPServer, index *search.Index) {
-	getSettingsTool := mcp.NewTool(
-		"get_settings",
-		mcp.WithDescription("Get the settings for the Algolia index"),
-	)
+// GetSettingsParams defines the parameters for getting settings.
+type GetSettingsParams struct{}
 
-	mcps.AddTool(getSettingsTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func RegisterGetSettings(mcps *mcp.Server, index *search.Index) {
+	schema, _ := jsonschema.For[GetSettingsParams]()
+	getSettingsTool := &mcp.Tool{
+		Name:        "get_settings",
+		Description: "Get the settings for the Algolia index",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getSettingsTool, func(_ context.Context, _ *mcp.ServerSession, _ *mcp.CallToolParamsFor[GetSettingsParams]) (*mcp.CallToolResultFor[any], error) {
 		settings, err := index.GetSettings()
 		if err != nil {
 			return nil, err

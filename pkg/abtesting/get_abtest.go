@@ -6,24 +6,25 @@ import (
 	"os"
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/analytics"
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetABTest registers the get_abtest tool with the MCP server.
-func RegisterGetABTest(mcps *server.MCPServer) {
-	getABTestTool := mcp.NewTool(
-		"abtesting_get_abtest",
-		mcp.WithDescription("Retrieve the details for an A/B test by its ID"),
-		mcp.WithNumber(
-			"id",
-			mcp.Description("Unique A/B test identifier"),
-			mcp.Required(),
-		),
-	)
+// GetABTestParams defines the parameters for retrieving an A/B test.
+type GetABTestParams struct {
+	ID float64 `json:"id" jsonschema:"Unique A/B test identifier"`
+}
 
-	mcps.AddTool(getABTestTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetABTest registers the get_abtest tool with the MCP server.
+func RegisterGetABTest(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[GetABTestParams]()
+	getABTestTool := &mcp.Tool{
+		Name:        "abtesting_get_abtest",
+		Description: "Retrieve the details for an A/B test by its ID",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getABTestTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetABTestParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -31,11 +32,7 @@ func RegisterGetABTest(mcps *server.MCPServer) {
 		}
 
 		// Get the AB Test ID from the request
-		idFloat, ok := req.Params.Arguments["id"].(float64)
-		if !ok {
-			return nil, fmt.Errorf("invalid AB test ID")
-		}
-		id := int(idFloat)
+		id := int(params.Arguments.ID)
 
 		// Create Algolia Analytics client
 		client := analytics.NewClient(appID, apiKey)
@@ -59,6 +56,12 @@ func RegisterGetABTest(mcps *server.MCPServer) {
 			"variants":               res.Variants,
 		}
 
-		return mcputil.JSONToolResult(fmt.Sprintf("AB Test %d", id), result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("AB Test %d: %v", id, result),
+				},
+			},
+		}, nil
 	})
 }

@@ -7,34 +7,27 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterDeleteRecommendRule registers the delete_recommend_rule tool with the MCP server.
-func RegisterDeleteRecommendRule(mcps *server.MCPServer) {
-	deleteRecommendRuleTool := mcp.NewTool(
-		"recommend_delete_recommend_rule",
-		mcp.WithDescription("Delete a Recommend rule from a recommendation scenario"),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("Name of the index on which to perform the operation"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"model",
-			mcp.Description("Recommend model (related-products, bought-together, trending-facets, trending-items)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"objectID",
-			mcp.Description("Unique record identifier"),
-			mcp.Required(),
-		),
-	)
+// DeleteRecommendRuleParams defines the parameters for deleting a recommend rule.
+type DeleteRecommendRuleParams struct {
+	IndexName string `json:"indexName" jsonschema:"Name of the index on which to perform the operation"`
+	Model     string `json:"model" jsonschema:"Recommend model (related-products, bought-together, trending-facets, trending-items)"`
+	ObjectID  string `json:"objectID" jsonschema:"Unique record identifier"`
+}
 
-	mcps.AddTool(deleteRecommendRuleTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterDeleteRecommendRule registers the delete_recommend_rule tool with the MCP server.
+func RegisterDeleteRecommendRule(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[DeleteRecommendRuleParams]()
+	deleteRecommendRuleTool := &mcp.Tool{
+		Name:        "recommend_delete_recommend_rule",
+		Description: "Delete a Recommend rule from a recommendation scenario",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, deleteRecommendRuleTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[DeleteRecommendRuleParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for deleting rules
 		if appID == "" || apiKey == "" {
@@ -42,17 +35,17 @@ func RegisterDeleteRecommendRule(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		indexName, _ := req.Params.Arguments["indexName"].(string)
+		indexName := params.Arguments.IndexName
 		if indexName == "" {
 			return nil, fmt.Errorf("indexName parameter is required")
 		}
 
-		model, _ := req.Params.Arguments["model"].(string)
+		model := params.Arguments.Model
 		if model == "" {
 			return nil, fmt.Errorf("model parameter is required")
 		}
 
-		objectID, _ := req.Params.Arguments["objectID"].(string)
+		objectID := params.Arguments.ObjectID
 		if objectID == "" {
 			return nil, fmt.Errorf("objectID parameter is required")
 		}
@@ -92,6 +85,12 @@ func RegisterDeleteRecommendRule(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Recommend Rule Deleted", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Recommend Rule Deleted: %v", result),
+				},
+			},
+		}, nil
 	})
 }

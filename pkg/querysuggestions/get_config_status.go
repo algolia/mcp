@@ -7,29 +7,26 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetConfigStatus registers the get_query_suggestions_config_status tool with the MCP server.
-func RegisterGetConfigStatus(mcps *server.MCPServer) {
-	getConfigStatusTool := mcp.NewTool(
-		"query_suggestions_get_config_status",
-		mcp.WithDescription("Reports the status of a Query Suggestions index"),
-		mcp.WithString(
-			"region",
-			mcp.Description("Analytics region (us or eu)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("Query Suggestions index name"),
-			mcp.Required(),
-		),
-	)
+// GetConfigStatusParams defines the parameters for getting Query Suggestions configuration status.
+type GetConfigStatusParams struct {
+	Region    string `json:"region" jsonschema:"Analytics region (us or eu)"`
+	IndexName string `json:"indexName" jsonschema:"Query Suggestions index name"`
+}
 
-	mcps.AddTool(getConfigStatusTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetConfigStatus registers the get_query_suggestions_config_status tool with the MCP server.
+func RegisterGetConfigStatus(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[GetConfigStatusParams]()
+	getConfigStatusTool := &mcp.Tool{
+		Name:        "query_suggestions_get_config_status",
+		Description: "Reports the status of a Query Suggestions index",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getConfigStatusTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetConfigStatusParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -37,12 +34,12 @@ func RegisterGetConfigStatus(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		region, _ := req.Params.Arguments["region"].(string)
+		region := params.Arguments.Region
 		if region == "" {
 			return nil, fmt.Errorf("region parameter is required")
 		}
 
-		indexName, _ := req.Params.Arguments["indexName"].(string)
+		indexName := params.Arguments.IndexName
 		if indexName == "" {
 			return nil, fmt.Errorf("indexName parameter is required")
 		}
@@ -87,6 +84,12 @@ func RegisterGetConfigStatus(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Query Suggestions Configuration Status", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Query Suggestions Configuration Status: %v", result),
+				},
+			},
+		}, nil
 	})
 }

@@ -8,34 +8,27 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterCreateABTest registers the create_abtest tool with the MCP server.
-func RegisterCreateABTest(mcps *server.MCPServer) {
-	createABTestTool := mcp.NewTool(
-		"abtesting_create_abtest",
-		mcp.WithDescription("Create a new A/B test"),
-		mcp.WithString(
-			"name",
-			mcp.Description("A/B test name"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"endAt",
-			mcp.Description("End date and time of the A/B test, in RFC 3339 format (e.g., 2023-06-17T00:00:00Z)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"variants",
-			mcp.Description("A/B test variants as JSON array (exactly 2 variants required). Each variant must have 'index' and 'trafficPercentage' fields, and may optionally have 'description' and 'customSearchParameters' fields."),
-			mcp.Required(),
-		),
-	)
+// CreateABTestParams defines the parameters for creating an A/B test.
+type CreateABTestParams struct {
+	Name     string `json:"name" jsonschema:"A/B test name"`
+	EndAt    string `json:"endAt" jsonschema:"End date and time of the A/B test in RFC 3339 format (e.g. 2023-06-17T00:00:00Z)"`
+	Variants string `json:"variants" jsonschema:"A/B test variants as JSON array (exactly 2 variants required). Each variant must have 'index' and 'trafficPercentage' fields and may optionally have 'description' and 'customSearchParameters' fields."`
+}
 
-	mcps.AddTool(createABTestTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterCreateABTest registers the create_abtest tool with the MCP server.
+func RegisterCreateABTest(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[CreateABTestParams]()
+	createABTestTool := &mcp.Tool{
+		Name:        "abtesting_create_abtest",
+		Description: "Create a new A/B test",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, createABTestTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[CreateABTestParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for creating AB tests
 		if appID == "" || apiKey == "" {
@@ -43,9 +36,9 @@ func RegisterCreateABTest(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		name, _ := req.Params.Arguments["name"].(string)
-		endAt, _ := req.Params.Arguments["endAt"].(string)
-		variantsJSON, _ := req.Params.Arguments["variants"].(string)
+		name := params.Arguments.Name
+		endAt := params.Arguments.EndAt
+		variantsJSON := params.Arguments.Variants
 
 		// Parse variants JSON
 		var variants []any
@@ -105,6 +98,12 @@ func RegisterCreateABTest(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("AB Test Created", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "AB Test Created: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

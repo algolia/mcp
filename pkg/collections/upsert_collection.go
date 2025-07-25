@@ -8,49 +8,31 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterUpsertCollection registers the upsert_collection tool with the MCP server.
-func RegisterUpsertCollection(mcps *server.MCPServer) {
-	upsertCollectionTool := mcp.NewTool(
-		"collections_upsert_collection",
-		mcp.WithDescription("Upserts a collection"),
-		mcp.WithString(
-			"id",
-			mcp.Description("Collection ID (optional for new collections)"),
-		),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("Name of the index"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"name",
-			mcp.Description("Collection name"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"description",
-			mcp.Description("Collection description"),
-		),
-		mcp.WithString(
-			"add",
-			mcp.Description("JSON array of objectIDs to add to the collection"),
-		),
-		mcp.WithString(
-			"remove",
-			mcp.Description("JSON array of objectIDs to remove from the collection"),
-		),
-		mcp.WithString(
-			"conditions",
-			mcp.Description("JSON object with conditions to filter records"),
-		),
-	)
+// UpsertCollectionParams defines the parameters for upserting a collection.
+type UpsertCollectionParams struct {
+	ID          *string `json:"id,omitempty" jsonschema:"Collection ID (optional for new collections)"`
+	IndexName   string  `json:"indexName" jsonschema:"Name of the index"`
+	Name        string  `json:"name" jsonschema:"Collection name"`
+	Description *string `json:"description,omitempty" jsonschema:"Collection description"`
+	Add         *string `json:"add,omitempty" jsonschema:"JSON array of objectIDs to add to the collection"`
+	Remove      *string `json:"remove,omitempty" jsonschema:"JSON array of objectIDs to remove from the collection"`
+	Conditions  *string `json:"conditions,omitempty" jsonschema:"JSON object with conditions to filter records"`
+}
 
-	mcps.AddTool(upsertCollectionTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterUpsertCollection registers the upsert_collection tool with the MCP server.
+func RegisterUpsertCollection(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[UpsertCollectionParams]()
+	upsertCollectionTool := &mcp.Tool{
+		Name:        "collections_upsert_collection",
+		Description: "Upserts a collection",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, upsertCollectionTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[UpsertCollectionParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for creating/updating collections
 		if appID == "" || apiKey == "" {
@@ -58,12 +40,12 @@ func RegisterUpsertCollection(mcps *server.MCPServer) {
 		}
 
 		// Extract required parameters
-		indexName, _ := req.Params.Arguments["indexName"].(string)
+		indexName := params.Arguments.IndexName
 		if indexName == "" {
 			return nil, fmt.Errorf("indexName parameter is required")
 		}
 
-		name, _ := req.Params.Arguments["name"].(string)
+		name := params.Arguments.Name
 		if name == "" {
 			return nil, fmt.Errorf("name parameter is required")
 		}
@@ -75,36 +57,36 @@ func RegisterUpsertCollection(mcps *server.MCPServer) {
 		}
 
 		// Add optional parameters if provided
-		if id, ok := req.Params.Arguments["id"].(string); ok && id != "" {
-			requestBody["id"] = id
+		if params.Arguments.ID != nil && *params.Arguments.ID != "" {
+			requestBody["id"] = *params.Arguments.ID
 		}
 
-		if description, ok := req.Params.Arguments["description"].(string); ok && description != "" {
-			requestBody["description"] = description
+		if params.Arguments.Description != nil && *params.Arguments.Description != "" {
+			requestBody["description"] = *params.Arguments.Description
 		}
 
 		// Parse and add 'add' array if provided
-		if addJSON, ok := req.Params.Arguments["add"].(string); ok && addJSON != "" {
+		if params.Arguments.Add != nil && *params.Arguments.Add != "" {
 			var add []string
-			if err := json.Unmarshal([]byte(addJSON), &add); err != nil {
+			if err := json.Unmarshal([]byte(*params.Arguments.Add), &add); err != nil {
 				return nil, fmt.Errorf("invalid add JSON: %w", err)
 			}
 			requestBody["add"] = add
 		}
 
 		// Parse and add 'remove' array if provided
-		if removeJSON, ok := req.Params.Arguments["remove"].(string); ok && removeJSON != "" {
+		if params.Arguments.Remove != nil && *params.Arguments.Remove != "" {
 			var remove []string
-			if err := json.Unmarshal([]byte(removeJSON), &remove); err != nil {
+			if err := json.Unmarshal([]byte(*params.Arguments.Remove), &remove); err != nil {
 				return nil, fmt.Errorf("invalid remove JSON: %w", err)
 			}
 			requestBody["remove"] = remove
 		}
 
 		// Parse and add 'conditions' object if provided
-		if conditionsJSON, ok := req.Params.Arguments["conditions"].(string); ok && conditionsJSON != "" {
+		if params.Arguments.Conditions != nil && *params.Arguments.Conditions != "" {
 			var conditions map[string]any
-			if err := json.Unmarshal([]byte(conditionsJSON), &conditions); err != nil {
+			if err := json.Unmarshal([]byte(*params.Arguments.Conditions), &conditions); err != nil {
 				return nil, fmt.Errorf("invalid conditions JSON: %w", err)
 			}
 			requestBody["conditions"] = conditions
@@ -151,6 +133,12 @@ func RegisterUpsertCollection(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Collection Upserted", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Collection Upserted: %v", result),
+				},
+			},
+		}, nil
 	})
 }

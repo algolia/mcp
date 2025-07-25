@@ -6,26 +6,27 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetClusterStatus registers the get_cluster_status tool with the MCP server.
-func RegisterGetClusterStatus(mcps *server.MCPServer) {
-	getClusterStatusTool := mcp.NewTool(
-		"monitoring_get_cluster_status",
-		mcp.WithDescription("Retrieves the status of selected clusters"),
-		mcp.WithString(
-			"clusters",
-			mcp.Description("Subset of clusters, separated by commas (e.g., c1-de,c2-de,c3-de)"),
-			mcp.Required(),
-		),
-	)
+// GetClusterStatusParams defines the parameters for retrieving cluster status.
+type GetClusterStatusParams struct {
+	Clusters string `json:"clusters" jsonschema:"Subset of clusters, separated by commas (e.g., c1-de,c2-de,c3-de)"`
+}
 
-	mcps.AddTool(getClusterStatusTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetClusterStatus registers the get_cluster_status tool with the MCP server.
+func RegisterGetClusterStatus(s *mcp.Server) {
+	schema, _ := jsonschema.For[GetClusterStatusParams]()
+	getClusterStatusTool := &mcp.Tool{
+		Name:        "monitoring_get_cluster_status",
+		Description: "Retrieves the status of selected clusters",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(s, getClusterStatusTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetClusterStatusParams]) (*mcp.CallToolResultFor[any], error) {
 		// Extract parameters
-		clusters, _ := req.Params.Arguments["clusters"].(string)
+		clusters := params.Arguments.Clusters
 		if clusters == "" {
 			return nil, fmt.Errorf("clusters parameter is required")
 		}
@@ -63,6 +64,12 @@ func RegisterGetClusterStatus(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Cluster Status", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Cluster Status: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

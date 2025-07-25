@@ -9,38 +9,28 @@ import (
 	"os"
 	"strings"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetHourlyMetrics registers the get_hourly_metrics tool with the MCP server.
-func RegisterGetHourlyMetrics(mcps *server.MCPServer) {
-	getHourlyMetricsTool := mcp.NewTool(
-		"usage_get_hourly_metrics",
-		mcp.WithDescription("Returns a list of billing metrics per hour for the specified application"),
-		mcp.WithString(
-			"application",
-			mcp.Description("Algolia Application ID"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"startTime",
-			mcp.Description("The start time of the period for which the metrics should be returned (ISO 8601 format)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"endTime",
-			mcp.Description("The end time (included) of the period for which the metrics should be returned (ISO 8601 format)"),
-		),
-		mcp.WithString(
-			"metricNames",
-			mcp.Description("Comma-separated list of metric names to retrieve"),
-			mcp.Required(),
-		),
-	)
+// GetHourlyMetricsParams defines the parameters for retrieving hourly metrics.
+type GetHourlyMetricsParams struct {
+	Application string `json:"application" jsonschema:"Algolia Application ID"`
+	StartTime   string `json:"startTime" jsonschema:"The start time of the period for which the metrics should be returned (ISO 8601 format)"`
+	EndTime     string `json:"endTime,omitempty" jsonschema:"The end time (included) of the period for which the metrics should be returned (ISO 8601 format)"`
+	MetricNames string `json:"metricNames" jsonschema:"Comma-separated list of metric names to retrieve"`
+}
 
-	mcps.AddTool(getHourlyMetricsTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetHourlyMetrics registers the get_hourly_metrics tool with the MCP server.
+func RegisterGetHourlyMetrics(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[GetHourlyMetricsParams]()
+	getHourlyMetricsTool := &mcp.Tool{
+		Name:        "usage_get_hourly_metrics",
+		Description: "Returns a list of billing metrics per hour for the specified application",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getHourlyMetricsTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetHourlyMetricsParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -48,17 +38,17 @@ func RegisterGetHourlyMetrics(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		application, _ := req.Params.Arguments["application"].(string)
+		application := params.Arguments.Application
 		if application == "" {
 			return nil, fmt.Errorf("application parameter is required")
 		}
 
-		startTime, _ := req.Params.Arguments["startTime"].(string)
+		startTime := params.Arguments.StartTime
 		if startTime == "" {
 			return nil, fmt.Errorf("startTime parameter is required")
 		}
 
-		metricNamesStr, _ := req.Params.Arguments["metricNames"].(string)
+		metricNamesStr := params.Arguments.MetricNames
 		if metricNamesStr == "" {
 			return nil, fmt.Errorf("metricNames parameter is required")
 		}
@@ -74,16 +64,16 @@ func RegisterGetHourlyMetrics(mcps *server.MCPServer) {
 		baseURL := "https://usage.algolia.com/2/metrics/hourly"
 
 		// Add query parameters
-		params := url.Values{}
-		params.Add("application", application)
-		params.Add("startTime", startTime)
-		if endTime, ok := req.Params.Arguments["endTime"].(string); ok && endTime != "" {
-			params.Add("endTime", endTime)
+		urlParams := url.Values{}
+		urlParams.Add("application", application)
+		urlParams.Add("startTime", startTime)
+		if params.Arguments.EndTime != "" {
+			urlParams.Add("endTime", params.Arguments.EndTime)
 		}
 		for _, name := range metricNames {
-			params.Add("name", name)
+			urlParams.Add("name", name)
 		}
-		url := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+		url := fmt.Sprintf("%s?%s", baseURL, urlParams.Encode())
 
 		httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
@@ -117,6 +107,12 @@ func RegisterGetHourlyMetrics(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Hourly Metrics", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Hourly Metrics: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

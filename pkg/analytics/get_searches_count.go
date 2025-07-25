@@ -7,36 +7,28 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetSearchesCount registers the get_searches_count tool with the MCP server.
-func RegisterGetSearchesCount(mcps *server.MCPServer) {
-	getSearchesCountTool := mcp.NewTool(
-		"analytics_get_searches_count",
-		mcp.WithDescription("Retrieve the number of searches within a time range, including a daily breakdown"),
-		mcp.WithString(
-			"index",
-			mcp.Description("Index name"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"startDate",
-			mcp.Description("Start date of the period to analyze, in YYYY-MM-DD format"),
-		),
-		mcp.WithString(
-			"endDate",
-			mcp.Description("End date of the period to analyze, in YYYY-MM-DD format"),
-		),
-		mcp.WithString(
-			"tags",
-			mcp.Description("Tags by which to segment the analytics"),
-		),
-	)
+// GetSearchesCountParams defines the parameters for retrieving searches count.
+type GetSearchesCountParams struct {
+	Index     string `json:"index" jsonschema:"Index name"`
+	StartDate string `json:"startDate,omitempty" jsonschema:"Start date of the period to analyze, in YYYY-MM-DD format"`
+	EndDate   string `json:"endDate,omitempty" jsonschema:"End date of the period to analyze, in YYYY-MM-DD format"`
+	Tags      string `json:"tags,omitempty" jsonschema:"Tags by which to segment the analytics"`
+}
 
-	mcps.AddTool(getSearchesCountTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetSearchesCount registers the get_searches_count tool with the MCP server.
+func RegisterGetSearchesCount(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[GetSearchesCountParams]()
+	getSearchesCountTool := &mcp.Tool{
+		Name:        "analytics_get_searches_count",
+		Description: "Retrieve the number of searches within a time range, including a daily breakdown",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getSearchesCountTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetSearchesCountParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -44,7 +36,7 @@ func RegisterGetSearchesCount(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		index, _ := req.Params.Arguments["index"].(string)
+		index := params.Arguments.Index
 		if index == "" {
 			return nil, fmt.Errorf("index parameter is required")
 		}
@@ -66,16 +58,16 @@ func RegisterGetSearchesCount(mcps *server.MCPServer) {
 		q := httpReq.URL.Query()
 		q.Add("index", index)
 
-		if startDate, ok := req.Params.Arguments["startDate"].(string); ok && startDate != "" {
-			q.Add("startDate", startDate)
+		if params.Arguments.StartDate != "" {
+			q.Add("startDate", params.Arguments.StartDate)
 		}
 
-		if endDate, ok := req.Params.Arguments["endDate"].(string); ok && endDate != "" {
-			q.Add("endDate", endDate)
+		if params.Arguments.EndDate != "" {
+			q.Add("endDate", params.Arguments.EndDate)
 		}
 
-		if tags, ok := req.Params.Arguments["tags"].(string); ok && tags != "" {
-			q.Add("tags", tags)
+		if params.Arguments.Tags != "" {
+			q.Add("tags", params.Arguments.Tags)
 		}
 
 		httpReq.URL.RawQuery = q.Encode()
@@ -102,6 +94,12 @@ func RegisterGetSearchesCount(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Searches Count", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Searches Count: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

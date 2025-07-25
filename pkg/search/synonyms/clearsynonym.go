@@ -6,19 +6,24 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func RegisterClearSynonyms(mcps *server.MCPServer, writeIndex *search.Index) {
-	clearSynonymsTool := mcp.NewTool(
-		"clear_synonyms",
-		mcp.WithDescription("Clear all synonyms from the Algolia index"),
-	)
+// ClearSynonymsParams defines the parameters for clearing synonyms.
+type ClearSynonymsParams struct{}
 
-	mcps.AddTool(clearSynonymsTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func RegisterClearSynonyms(mcps *mcp.Server, writeIndex *search.Index) {
+	schema, _ := jsonschema.For[ClearSynonymsParams]()
+	clearSynonymsTool := &mcp.Tool{
+		Name:        "clear_synonyms",
+		Description: "Clear all synonyms from the Algolia index",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, clearSynonymsTool, func(_ context.Context, _ *mcp.ServerSession, _ *mcp.CallToolParamsFor[ClearSynonymsParams]) (*mcp.CallToolResultFor[any], error) {
 		if writeIndex == nil {
-			return mcp.NewToolResultError("write API key not set, cannot clear synonyms"), nil
+			return nil, fmt.Errorf("write API key not set, cannot clear synonyms")
 		}
 
 		res, err := writeIndex.ClearSynonyms()

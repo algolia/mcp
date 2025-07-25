@@ -9,38 +9,28 @@ import (
 	"os"
 	"strings"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetDailyMetrics registers the get_daily_metrics tool with the MCP server.
-func RegisterGetDailyMetrics(mcps *server.MCPServer) {
-	getDailyMetricsTool := mcp.NewTool(
-		"usage_get_daily_metrics",
-		mcp.WithDescription("Returns a list of billing metrics per day for the specified applications"),
-		mcp.WithString(
-			"applications",
-			mcp.Description("Comma-separated list of Algolia Application IDs"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"startDate",
-			mcp.Description("The start date of the period for which the metrics should be returned (YYYY-MM-DD)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"endDate",
-			mcp.Description("The end date (included) of the period for which the metrics should be returned (YYYY-MM-DD)"),
-		),
-		mcp.WithString(
-			"metricNames",
-			mcp.Description("Comma-separated list of metric names to retrieve"),
-			mcp.Required(),
-		),
-	)
+// GetDailyMetricsParams defines the parameters for retrieving daily metrics.
+type GetDailyMetricsParams struct {
+	Applications string `json:"applications" jsonschema:"Comma-separated list of Algolia Application IDs"`
+	StartDate    string `json:"startDate" jsonschema:"The start date of the period for which the metrics should be returned (YYYY-MM-DD)"`
+	EndDate      string `json:"endDate,omitempty" jsonschema:"The end date (included) of the period for which the metrics should be returned (YYYY-MM-DD)"`
+	MetricNames  string `json:"metricNames" jsonschema:"Comma-separated list of metric names to retrieve"`
+}
 
-	mcps.AddTool(getDailyMetricsTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetDailyMetrics registers the get_daily_metrics tool with the MCP server.
+func RegisterGetDailyMetrics(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[GetDailyMetricsParams]()
+	getDailyMetricsTool := &mcp.Tool{
+		Name:        "usage_get_daily_metrics",
+		Description: "Returns a list of billing metrics per day for the specified applications",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getDailyMetricsTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetDailyMetricsParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -48,17 +38,17 @@ func RegisterGetDailyMetrics(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		applicationsStr, _ := req.Params.Arguments["applications"].(string)
+		applicationsStr := params.Arguments.Applications
 		if applicationsStr == "" {
 			return nil, fmt.Errorf("applications parameter is required")
 		}
 
-		startDate, _ := req.Params.Arguments["startDate"].(string)
+		startDate := params.Arguments.StartDate
 		if startDate == "" {
 			return nil, fmt.Errorf("startDate parameter is required")
 		}
 
-		metricNamesStr, _ := req.Params.Arguments["metricNames"].(string)
+		metricNamesStr := params.Arguments.MetricNames
 		if metricNamesStr == "" {
 			return nil, fmt.Errorf("metricNames parameter is required")
 		}
@@ -80,18 +70,18 @@ func RegisterGetDailyMetrics(mcps *server.MCPServer) {
 		baseURL := "https://usage.algolia.com/2/metrics/daily"
 
 		// Add query parameters
-		params := url.Values{}
+		urlParams := url.Values{}
 		for _, app := range applications {
-			params.Add("application", app)
+			urlParams.Add("application", app)
 		}
-		params.Add("startDate", startDate)
-		if endDate, ok := req.Params.Arguments["endDate"].(string); ok && endDate != "" {
-			params.Add("endDate", endDate)
+		urlParams.Add("startDate", startDate)
+		if params.Arguments.EndDate != "" {
+			urlParams.Add("endDate", params.Arguments.EndDate)
 		}
 		for _, name := range metricNames {
-			params.Add("name", name)
+			urlParams.Add("name", name)
 		}
-		url := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+		url := fmt.Sprintf("%s?%s", baseURL, urlParams.Encode())
 
 		httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
@@ -125,6 +115,12 @@ func RegisterGetDailyMetrics(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Daily Metrics", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Daily Metrics: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

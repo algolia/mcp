@@ -7,29 +7,26 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterDeleteConfig registers the delete_query_suggestions_config tool with the MCP server.
-func RegisterDeleteConfig(mcps *server.MCPServer) {
-	deleteConfigTool := mcp.NewTool(
-		"query_suggestions_delete_config",
-		mcp.WithDescription("Deletes a Query Suggestions configuration"),
-		mcp.WithString(
-			"region",
-			mcp.Description("Analytics region (us or eu)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("Query Suggestions index name"),
-			mcp.Required(),
-		),
-	)
+// DeleteConfigParams defines the parameters for deleting a Query Suggestions configuration.
+type DeleteConfigParams struct {
+	Region    string `json:"region" jsonschema:"Analytics region (us or eu)"`
+	IndexName string `json:"indexName" jsonschema:"Query Suggestions index name"`
+}
 
-	mcps.AddTool(deleteConfigTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterDeleteConfig registers the delete_query_suggestions_config tool with the MCP server.
+func RegisterDeleteConfig(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[DeleteConfigParams]()
+	deleteConfigTool := &mcp.Tool{
+		Name:        "query_suggestions_delete_config",
+		Description: "Deletes a Query Suggestions configuration",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, deleteConfigTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[DeleteConfigParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for deleting configurations
 		if appID == "" || apiKey == "" {
@@ -37,12 +34,12 @@ func RegisterDeleteConfig(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		region, _ := req.Params.Arguments["region"].(string)
+		region := params.Arguments.Region
 		if region == "" {
 			return nil, fmt.Errorf("region parameter is required")
 		}
 
-		indexName, _ := req.Params.Arguments["indexName"].(string)
+		indexName := params.Arguments.IndexName
 		if indexName == "" {
 			return nil, fmt.Errorf("indexName parameter is required")
 		}
@@ -87,6 +84,12 @@ func RegisterDeleteConfig(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Query Suggestions Configuration Deleted", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Query Suggestions Configuration Deleted: %v", result),
+				},
+			},
+		}, nil
 	})
 }

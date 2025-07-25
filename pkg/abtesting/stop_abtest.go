@@ -6,24 +6,25 @@ import (
 	"os"
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/analytics"
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterStopABTest registers the stop_abtest tool with the MCP server.
-func RegisterStopABTest(mcps *server.MCPServer) {
-	stopABTestTool := mcp.NewTool(
-		"abtesting_stop_abtest",
-		mcp.WithDescription("Stop an A/B test by its ID. You can't restart stopped A/B tests."),
-		mcp.WithNumber(
-			"id",
-			mcp.Description("Unique A/B test identifier"),
-			mcp.Required(),
-		),
-	)
+// StopABTestParams defines the parameters for stopping an A/B test.
+type StopABTestParams struct {
+	ID float64 `json:"id" jsonschema:"Unique A/B test identifier"`
+}
 
-	mcps.AddTool(stopABTestTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterStopABTest registers the stop_abtest tool with the MCP server.
+func RegisterStopABTest(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[StopABTestParams]()
+	stopABTestTool := &mcp.Tool{
+		Name:        "abtesting_stop_abtest",
+		Description: "Stop an A/B test by its ID. You can't restart stopped A/B tests.",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, stopABTestTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[StopABTestParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for stopping AB tests
 		if appID == "" || apiKey == "" {
@@ -31,11 +32,7 @@ func RegisterStopABTest(mcps *server.MCPServer) {
 		}
 
 		// Get the AB Test ID from the request
-		idFloat, ok := req.Params.Arguments["id"].(float64)
-		if !ok {
-			return nil, fmt.Errorf("invalid AB test ID")
-		}
-		id := int(idFloat)
+		id := int(params.Arguments.ID)
 
 		// Create Algolia Analytics client
 		client := analytics.NewClient(appID, apiKey)
@@ -52,6 +49,12 @@ func RegisterStopABTest(mcps *server.MCPServer) {
 			"index":  res.Index,
 		}
 
-		return mcputil.JSONToolResult(fmt.Sprintf("AB Test %d Stopped", id), result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("AB Test %d Stopped: %v", id, result),
+				},
+			},
+		}, nil
 	})
 }

@@ -6,24 +6,25 @@ import (
 	"os"
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/analytics"
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterDeleteABTest registers the delete_abtest tool with the MCP server.
-func RegisterDeleteABTest(mcps *server.MCPServer) {
-	deleteABTestTool := mcp.NewTool(
-		"abtesting_delete_abtest",
-		mcp.WithDescription("Delete an A/B test by its ID"),
-		mcp.WithNumber(
-			"id",
-			mcp.Description("Unique A/B test identifier"),
-			mcp.Required(),
-		),
-	)
+// DeleteABTestParams defines the parameters for deleting an A/B test.
+type DeleteABTestParams struct {
+	ID float64 `json:"id" jsonschema:"Unique A/B test identifier"`
+}
 
-	mcps.AddTool(deleteABTestTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterDeleteABTest registers the delete_abtest tool with the MCP server.
+func RegisterDeleteABTest(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[DeleteABTestParams]()
+	deleteABTestTool := &mcp.Tool{
+		Name:        "abtesting_delete_abtest",
+		Description: "Delete an A/B test by its ID",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, deleteABTestTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[DeleteABTestParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for deleting AB tests
 		if appID == "" || apiKey == "" {
@@ -31,11 +32,7 @@ func RegisterDeleteABTest(mcps *server.MCPServer) {
 		}
 
 		// Get the AB Test ID from the request
-		idFloat, ok := req.Params.Arguments["id"].(float64)
-		if !ok {
-			return nil, fmt.Errorf("invalid AB test ID")
-		}
-		id := int(idFloat)
+		id := int(params.Arguments.ID)
 
 		// Create Algolia Analytics client
 		client := analytics.NewClient(appID, apiKey)
@@ -52,6 +49,12 @@ func RegisterDeleteABTest(mcps *server.MCPServer) {
 			"index":  res.Index,
 		}
 
-		return mcputil.JSONToolResult(fmt.Sprintf("AB Test %d Deleted", id), result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("AB Test %d Deleted: %v", id, result),
+				},
+			},
+		}, nil
 	})
 }

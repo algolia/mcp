@@ -1,9 +1,9 @@
 package analytics
 
-import "github.com/mark3labs/mcp-go/server"
+import "github.com/modelcontextprotocol/go-sdk/mcp"
 
 // RegisterTools aggregates all analytics tool registrations.
-func RegisterTools(mcps *server.MCPServer) {
+func RegisterTools(mcps *mcp.Server) {
 	RegisterGetClickThroughRate(mcps)
 	RegisterGetNoResultsRate(mcps)
 	RegisterGetSearchesCount(mcps)

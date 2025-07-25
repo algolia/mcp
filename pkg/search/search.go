@@ -5,11 +5,11 @@ import (
 	"github.com/algolia/mcp/pkg/search/indices"
 	"github.com/algolia/mcp/pkg/search/query"
 	"github.com/algolia/mcp/pkg/search/records"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // RegisterAll registers all Search tools with the MCP server (both read and write).
-func RegisterAll(mcps *server.MCPServer) {
+func RegisterAll(mcps *mcp.Server) {
 	// Initialize Algolia client.
 	// Note: In a real implementation, you would get the app ID and API key from environment variables.
 	client := search.NewClient("", "")
@@ -21,7 +21,7 @@ func RegisterAll(mcps *server.MCPServer) {
 }
 
 // RegisterReadAll registers read-only Search tools with the MCP server.
-func RegisterReadAll(mcps *server.MCPServer, client *search.Client, index *search.Index) {
+func RegisterReadAll(mcps *mcp.Server, client *search.Client, index *search.Index) {
 	// Register read-only operations.
 	indices.RegisterList(mcps, client)
 	indices.RegisterGetSettings(mcps, index)
@@ -30,7 +30,7 @@ func RegisterReadAll(mcps *server.MCPServer, client *search.Client, index *searc
 }
 
 // RegisterWriteAll registers write-only Search tools with the MCP server.
-func RegisterWriteAll(mcps *server.MCPServer, client *search.Client, index *search.Index) {
+func RegisterWriteAll(mcps *mcp.Server, client *search.Client, index *search.Index) {
 	// Register write operations.
 	indices.RegisterClear(mcps, index)
 	indices.RegisterCopy(mcps, client, index)

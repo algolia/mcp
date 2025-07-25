@@ -8,24 +8,25 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/recommend"
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetRecommendations registers the get_recommendations tool with the MCP server.
-func RegisterGetRecommendations(mcps *server.MCPServer) {
-	getRecommendationsTool := mcp.NewTool(
-		"recommend_get_recommendations",
-		mcp.WithDescription("Retrieve recommendations from selected AI models"),
-		mcp.WithString(
-			"requests",
-			mcp.Description("JSON array of recommendation requests. Each request must include 'indexName', 'threshold', and a model-specific configuration."),
-			mcp.Required(),
-		),
-	)
+// GetRecommendationsParams defines the parameters for retrieving recommendations.
+type GetRecommendationsParams struct {
+	Requests string `json:"requests" jsonschema:"JSON array of recommendation requests. Each request must include 'indexName', 'threshold', and a model-specific configuration."`
+}
 
-	mcps.AddTool(getRecommendationsTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetRecommendations registers the get_recommendations tool with the MCP server.
+func RegisterGetRecommendations(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[GetRecommendationsParams]()
+	getRecommendationsTool := &mcp.Tool{
+		Name:        "recommend_get_recommendations",
+		Description: "Retrieve recommendations from selected AI models",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getRecommendationsTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetRecommendationsParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -33,7 +34,7 @@ func RegisterGetRecommendations(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		requestsJSON, _ := req.Params.Arguments["requests"].(string)
+		requestsJSON := params.Arguments.Requests
 		if requestsJSON == "" {
 			return nil, fmt.Errorf("requests parameter is required")
 		}
@@ -103,6 +104,12 @@ func RegisterGetRecommendations(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to get recommendations: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Recommendations", res)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Recommendations: %v", res),
+				},
+			},
+		}, nil
 	})
 }
