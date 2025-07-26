@@ -14,10 +14,10 @@ import (
 
 // BatchRecommendRulesParams defines the parameters for batch operations on recommend rules.
 type BatchRecommendRulesParams struct {
-	IndexName           string `json:"indexName" jsonschema:"Name of the index on which to perform the operation"`
-	Model               string `json:"model" jsonschema:"Recommend model (related-products, bought-together, trending-facets, trending-items)"`
-	Rules               string `json:"rules" jsonschema:"JSON array of Recommend rules to create or update"`
-	ClearExistingRules  *bool  `json:"clearExistingRules,omitempty" jsonschema:"Whether to replace all existing rules with the provided batch"`
+	IndexName          string `json:"indexName" jsonschema:"Name of the index on which to perform the operation"`
+	Model              string `json:"model" jsonschema:"Recommend model (related-products, bought-together, trending-facets, trending-items)"`
+	Rules              string `json:"rules" jsonschema:"JSON array of Recommend rules to create or update"`
+	ClearExistingRules *bool  `json:"clearExistingRules,omitempty" jsonschema:"Whether to replace all existing rules with the provided batch"`
 }
 
 // RegisterBatchRecommendRules registers the batch_recommend_rules tool with the MCP server.

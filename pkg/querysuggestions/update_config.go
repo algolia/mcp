@@ -14,13 +14,13 @@ import (
 
 // UpdateConfigParams defines the parameters for updating a Query Suggestions configuration.
 type UpdateConfigParams struct {
-	Region                  string  `json:"region" jsonschema:"Analytics region (us or eu)"`
-	IndexName               string  `json:"indexName" jsonschema:"Query Suggestions index name"`
-	SourceIndices           string  `json:"sourceIndices" jsonschema:"JSON array of source indices configurations"`
-	Languages               *string `json:"languages,omitempty" jsonschema:"JSON array of languages or boolean for deduplicating singular and plural suggestions"`
-	Exclude                 *string `json:"exclude,omitempty" jsonschema:"JSON array of words or regular expressions to exclude from the suggestions"`
-	EnablePersonalization   *bool   `json:"enablePersonalization,omitempty" jsonschema:"Whether to turn on personalized query suggestions"`
-	AllowSpecialCharacters  *bool   `json:"allowSpecialCharacters,omitempty" jsonschema:"Whether to include suggestions with special characters"`
+	Region                 string  `json:"region" jsonschema:"Analytics region (us or eu)"`
+	IndexName              string  `json:"indexName" jsonschema:"Query Suggestions index name"`
+	SourceIndices          string  `json:"sourceIndices" jsonschema:"JSON array of source indices configurations"`
+	Languages              *string `json:"languages,omitempty" jsonschema:"JSON array of languages or boolean for deduplicating singular and plural suggestions"`
+	Exclude                *string `json:"exclude,omitempty" jsonschema:"JSON array of words or regular expressions to exclude from the suggestions"`
+	EnablePersonalization  *bool   `json:"enablePersonalization,omitempty" jsonschema:"Whether to turn on personalized query suggestions"`
+	AllowSpecialCharacters *bool   `json:"allowSpecialCharacters,omitempty" jsonschema:"Whether to include suggestions with special characters"`
 }
 
 // RegisterUpdateConfig registers the update_query_suggestions_config tool with the MCP server.

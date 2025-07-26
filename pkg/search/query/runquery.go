@@ -16,13 +16,13 @@ import (
 
 // RunQueryParams defines the parameters for running a query.
 type RunQueryParams struct {
-	Query                       string  `json:"query" jsonschema:"The query to run against the index"`
-	IndexName                   string  `json:"indexName,omitempty" jsonschema:"The index to search into"`
-	HitsPerPage                 *int    `json:"hitsPerPage,omitempty" jsonschema:"The number of hits to return per page"`
-	Page                        *int    `json:"page,omitempty" jsonschema:"The page number (0-based) to retrieve"`
-	Filters                     string  `json:"filters,omitempty" jsonschema:"The filter expression using Algolia's filter syntax (e.g., 'category:Book AND price < 100')"`
-	Facets                      string  `json:"facets,omitempty" jsonschema:"Comma-separated list of attributes to facet on"`
-	RestrictSearchableAttributes string  `json:"restrictSearchableAttributes,omitempty" jsonschema:"Comma-separated list of attributes to search in"`
+	Query                        string `json:"query" jsonschema:"The query to run against the index"`
+	IndexName                    string `json:"indexName,omitempty" jsonschema:"The index to search into"`
+	HitsPerPage                  *int   `json:"hitsPerPage,omitempty" jsonschema:"The number of hits to return per page"`
+	Page                         *int   `json:"page,omitempty" jsonschema:"The page number (0-based) to retrieve"`
+	Filters                      string `json:"filters,omitempty" jsonschema:"The filter expression using Algolia's filter syntax (e.g., 'category:Book AND price < 100')"`
+	Facets                       string `json:"facets,omitempty" jsonschema:"Comma-separated list of attributes to facet on"`
+	RestrictSearchableAttributes string `json:"restrictSearchableAttributes,omitempty" jsonschema:"Comma-separated list of attributes to search in"`
 }
 
 func RegisterRunQuery(mcps *mcp.Server, client *search.Client, index *search.Index) {

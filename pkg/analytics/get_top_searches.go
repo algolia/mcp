@@ -14,16 +14,16 @@ import (
 
 // GetTopSearchesParams defines the parameters for retrieving top searches.
 type GetTopSearchesParams struct {
-	Index            string  `json:"index" jsonschema:"Index name"`
-	ClickAnalytics   *bool   `json:"clickAnalytics,omitempty" jsonschema:"Whether to include metrics related to click and conversion events in the response"`
-	RevenueAnalytics *bool   `json:"revenueAnalytics,omitempty" jsonschema:"Whether to include metrics related to revenue events in the response"`
-	StartDate        string  `json:"startDate,omitempty" jsonschema:"Start date of the period to analyze, in YYYY-MM-DD format"`
-	EndDate          string  `json:"endDate,omitempty" jsonschema:"End date of the period to analyze, in YYYY-MM-DD format"`
-	OrderBy          string  `json:"orderBy,omitempty" jsonschema:"Attribute by which to order the response items (searchCount, clickThroughRate, conversionRate, averageClickPosition)"`
-	Direction        string  `json:"direction,omitempty" jsonschema:"Sorting direction of the results: asc or desc"`
-	Limit            *int    `json:"limit,omitempty" jsonschema:"Number of items to return (max 1000)"`
-	Offset           *int    `json:"offset,omitempty" jsonschema:"Position of the first item to return"`
-	Tags             string  `json:"tags,omitempty" jsonschema:"Tags by which to segment the analytics"`
+	Index            string `json:"index" jsonschema:"Index name"`
+	ClickAnalytics   *bool  `json:"clickAnalytics,omitempty" jsonschema:"Whether to include metrics related to click and conversion events in the response"`
+	RevenueAnalytics *bool  `json:"revenueAnalytics,omitempty" jsonschema:"Whether to include metrics related to revenue events in the response"`
+	StartDate        string `json:"startDate,omitempty" jsonschema:"Start date of the period to analyze, in YYYY-MM-DD format"`
+	EndDate          string `json:"endDate,omitempty" jsonschema:"End date of the period to analyze, in YYYY-MM-DD format"`
+	OrderBy          string `json:"orderBy,omitempty" jsonschema:"Attribute by which to order the response items (searchCount, clickThroughRate, conversionRate, averageClickPosition)"`
+	Direction        string `json:"direction,omitempty" jsonschema:"Sorting direction of the results: asc or desc"`
+	Limit            *int   `json:"limit,omitempty" jsonschema:"Number of items to return (max 1000)"`
+	Offset           *int   `json:"offset,omitempty" jsonschema:"Position of the first item to return"`
+	Tags             string `json:"tags,omitempty" jsonschema:"Tags by which to segment the analytics"`
 }
 
 // RegisterGetTopSearches registers the get_top_searches tool with the MCP server.
