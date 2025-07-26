@@ -7,43 +7,40 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
-
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 const (
 	synonymsBaseURL = "https://%s.algolia.net/1/indexes/%s/synonyms/%s"
 )
 
-func RegisterInsertSynonym(mcps *server.MCPServer, index *search.Index, appID, apiKey string) {
-	insertSynonymTool := mcp.NewTool(
-		"save_synonym",
-		mcp.WithDescription("Save or update a synonym in the Algolia index"),
-		mcp.WithString(
-			"objectID",
-			mcp.Description("The unique identifier of the synonym"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"synonym",
-			mcp.Description("The synonym object as a JSON string. Example schema: {\"objectID\":\"unique_id\",\"type\":\"synonym\",\"synonyms\":[\"word1\",\"word2\",\"word3\"]} or {\"objectID\":\"unique_id\",\"type\":\"oneWaySynonym\",\"input\":\"word1\",\"synonyms\":[\"word2\",\"word3\"]} or {\"objectID\":\"unique_id\",\"type\":\"altCorrection1\",\"word\":\"word1\",\"corrections\":[\"word2\",\"word3\"]} or {\"objectID\":\"unique_id\",\"type\":\"altCorrection2\",\"word\":\"word1\",\"corrections\":[\"word2\",\"word3\"]} or {\"objectID\":\"unique_id\",\"type\":\"placeholder\",\"placeholder\":\"<em>`,\"replacements\":[\"word1\",\"word2\"]}"),
-			mcp.Required(),
-		),
-	)
+// InsertSynonymParams defines the parameters for inserting a synonym.
+type InsertSynonymParams struct {
+	ObjectID string `json:"objectID" jsonschema:"The unique identifier of the synonym"`
+	Synonym  string `json:"synonym" jsonschema:"The synonym object as a JSON string. Example schema: {\"objectID\":\"unique_id\",\"type\":\"synonym\",\"synonyms\":[\"word1\",\"word2\",\"word3\"]} or {\"objectID\":\"unique_id\",\"type\":\"oneWaySynonym\",\"input\":\"word1\",\"synonyms\":[\"word2\",\"word3\"]} or {\"objectID\":\"unique_id\",\"type\":\"altCorrection1\",\"word\":\"word1\",\"corrections\":[\"word2\",\"word3\"]} or {\"objectID\":\"unique_id\",\"type\":\"altCorrection2\",\"word\":\"word1\",\"corrections\":[\"word2\",\"word3\"]} or {\"objectID\":\"unique_id\",\"type\":\"placeholder\",\"placeholder\":\"<em>\",\"replacements\":[\"word1\",\"word2\"]}"`
+}
 
-	mcps.AddTool(insertSynonymTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func RegisterInsertSynonym(mcps *mcp.Server, index *search.Index, appID, apiKey string) {
+	schema, _ := jsonschema.For[InsertSynonymParams]()
+	insertSynonymTool := &mcp.Tool{
+		Name:        "save_synonym",
+		Description: "Save or update a synonym in the Algolia index",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, insertSynonymTool, func(_ context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[InsertSynonymParams]) (*mcp.CallToolResultFor[any], error) {
 		indexName := index.GetName()
-		objectID, ok := req.Params.Arguments["objectID"].(string)
-		if !ok {
-			return mcp.NewToolResultError("invalid objectID format"), nil
+		objectID := params.Arguments.ObjectID
+		if objectID == "" {
+			return nil, fmt.Errorf("invalid objectID format")
 		}
 
-		synonymStr, ok := req.Params.Arguments["synonym"].(string)
-		if !ok {
-			return mcp.NewToolResultError("invalid synonym format"), nil
+		synonymStr := params.Arguments.Synonym
+		if synonymStr == "" {
+			return nil, fmt.Errorf("invalid synonym format")
 		}
 
 		// Parse synonym

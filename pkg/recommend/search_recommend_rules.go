@@ -8,53 +8,32 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterSearchRecommendRules registers the search_recommend_rules tool with the MCP server.
-func RegisterSearchRecommendRules(mcps *server.MCPServer) {
-	searchRecommendRulesTool := mcp.NewTool(
-		"recommend_search_recommend_rules",
-		mcp.WithDescription("Search for Recommend rules. Use an empty query to list all rules for this recommendation scenario."),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("Name of the index on which to perform the operation"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"model",
-			mcp.Description("Recommend model (related-products, bought-together, trending-facets, trending-items)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"query",
-			mcp.Description("Search query"),
-		),
-		mcp.WithString(
-			"context",
-			mcp.Description("Only search for rules with matching context"),
-		),
-		mcp.WithNumber(
-			"page",
-			mcp.Description("Requested page of the API response"),
-		),
-		mcp.WithNumber(
-			"hitsPerPage",
-			mcp.Description("Maximum number of hits per page"),
-		),
-		mcp.WithBoolean(
-			"enabled",
-			mcp.Description("Whether to only show rules where the value of their 'enabled' property matches this parameter"),
-		),
-		mcp.WithString(
-			"filters",
-			mcp.Description("Filter expression. This only searches for rules matching the filter expression"),
-		),
-	)
+// SearchRecommendRulesParams defines the parameters for searching recommend rules.
+type SearchRecommendRulesParams struct {
+	IndexName   string  `json:"indexName" jsonschema:"Name of the index on which to perform the operation"`
+	Model       string  `json:"model" jsonschema:"Recommend model (related-products, bought-together, trending-facets, trending-items)"`
+	Query       *string `json:"query,omitempty" jsonschema:"Search query"`
+	Context     *string `json:"context,omitempty" jsonschema:"Only search for rules with matching context"`
+	Page        *int    `json:"page,omitempty" jsonschema:"Requested page of the API response"`
+	HitsPerPage *int    `json:"hitsPerPage,omitempty" jsonschema:"Maximum number of hits per page"`
+	Enabled     *bool   `json:"enabled,omitempty" jsonschema:"Whether to only show rules where the value of their 'enabled' property matches this parameter"`
+	Filters     *string `json:"filters,omitempty" jsonschema:"Filter expression. This only searches for rules matching the filter expression"`
+}
 
-	mcps.AddTool(searchRecommendRulesTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterSearchRecommendRules registers the search_recommend_rules tool with the MCP server.
+func RegisterSearchRecommendRules(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[SearchRecommendRulesParams]()
+	searchRecommendRulesTool := &mcp.Tool{
+		Name:        "recommend_search_recommend_rules",
+		Description: "Search for Recommend rules. Use an empty query to list all rules for this recommendation scenario.",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, searchRecommendRulesTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[SearchRecommendRulesParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -62,12 +41,12 @@ func RegisterSearchRecommendRules(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		indexName, _ := req.Params.Arguments["indexName"].(string)
+		indexName := params.Arguments.IndexName
 		if indexName == "" {
 			return nil, fmt.Errorf("indexName parameter is required")
 		}
 
-		model, _ := req.Params.Arguments["model"].(string)
+		model := params.Arguments.Model
 		if model == "" {
 			return nil, fmt.Errorf("model parameter is required")
 		}
@@ -75,28 +54,28 @@ func RegisterSearchRecommendRules(mcps *server.MCPServer) {
 		// Prepare request body
 		requestBody := make(map[string]any)
 
-		if query, ok := req.Params.Arguments["query"].(string); ok && query != "" {
-			requestBody["query"] = query
+		if params.Arguments.Query != nil && *params.Arguments.Query != "" {
+			requestBody["query"] = *params.Arguments.Query
 		}
 
-		if context, ok := req.Params.Arguments["context"].(string); ok && context != "" {
-			requestBody["context"] = context
+		if params.Arguments.Context != nil && *params.Arguments.Context != "" {
+			requestBody["context"] = *params.Arguments.Context
 		}
 
-		if page, ok := req.Params.Arguments["page"].(float64); ok {
-			requestBody["page"] = int(page)
+		if params.Arguments.Page != nil {
+			requestBody["page"] = *params.Arguments.Page
 		}
 
-		if hitsPerPage, ok := req.Params.Arguments["hitsPerPage"].(float64); ok {
-			requestBody["hitsPerPage"] = int(hitsPerPage)
+		if params.Arguments.HitsPerPage != nil {
+			requestBody["hitsPerPage"] = *params.Arguments.HitsPerPage
 		}
 
-		if enabled, ok := req.Params.Arguments["enabled"].(bool); ok {
-			requestBody["enabled"] = enabled
+		if params.Arguments.Enabled != nil {
+			requestBody["enabled"] = *params.Arguments.Enabled
 		}
 
-		if filters, ok := req.Params.Arguments["filters"].(string); ok && filters != "" {
-			requestBody["filters"] = filters
+		if params.Arguments.Filters != nil && *params.Arguments.Filters != "" {
+			requestBody["filters"] = *params.Arguments.Filters
 		}
 
 		// Convert request body to JSON
@@ -140,6 +119,12 @@ func RegisterSearchRecommendRules(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Recommend Rules Search", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Recommend Rules Search: %v", result),
+				},
+			},
+		}, nil
 	})
 }

@@ -1,11 +1,11 @@
 package usage
 
 import (
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // RegisterAll registers all Usage tools with the MCP server.
-func RegisterAll(mcps *server.MCPServer) {
+func RegisterAll(mcps *mcp.Server) {
 	// Register all Usage tools.
 	RegisterGetMetricsRegistry(mcps)
 	RegisterGetDailyMetrics(mcps)

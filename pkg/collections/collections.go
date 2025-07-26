@@ -1,9 +1,9 @@
 package collections
 
-import "github.com/mark3labs/mcp-go/server"
+import "github.com/modelcontextprotocol/go-sdk/mcp"
 
 // RegisterTools aggregates all collections tool registrations.
-func RegisterTools(mcps *server.MCPServer) {
+func RegisterTools(mcps *mcp.Server) {
 	RegisterListCollections(mcps)
 	RegisterGetCollection(mcps)
 	RegisterUpsertCollection(mcps)

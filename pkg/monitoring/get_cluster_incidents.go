@@ -6,26 +6,27 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetClusterIncidents registers the get_cluster_incidents tool with the MCP server.
-func RegisterGetClusterIncidents(mcps *server.MCPServer) {
-	getClusterIncidentsTool := mcp.NewTool(
-		"monitoring_get_cluster_incidents",
-		mcp.WithDescription("Retrieves known incidents for the selected clusters"),
-		mcp.WithString(
-			"clusters",
-			mcp.Description("Subset of clusters, separated by commas (e.g., c1-de,c2-de,c3-de)"),
-			mcp.Required(),
-		),
-	)
+// GetClusterIncidentsParams defines the parameters for retrieving cluster incidents.
+type GetClusterIncidentsParams struct {
+	Clusters string `json:"clusters" jsonschema:"Subset of clusters, separated by commas (e.g., c1-de,c2-de,c3-de)"`
+}
 
-	mcps.AddTool(getClusterIncidentsTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetClusterIncidents registers the get_cluster_incidents tool with the MCP server.
+func RegisterGetClusterIncidents(s *mcp.Server) {
+	schema, _ := jsonschema.For[GetClusterIncidentsParams]()
+	getClusterIncidentsTool := &mcp.Tool{
+		Name:        "monitoring_get_cluster_incidents",
+		Description: "Retrieves known incidents for the selected clusters",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(s, getClusterIncidentsTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetClusterIncidentsParams]) (*mcp.CallToolResultFor[any], error) {
 		// Extract parameters
-		clusters, _ := req.Params.Arguments["clusters"].(string)
+		clusters := params.Arguments.Clusters
 		if clusters == "" {
 			return nil, fmt.Errorf("clusters parameter is required")
 		}
@@ -63,6 +64,12 @@ func RegisterGetClusterIncidents(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Cluster Incidents", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Cluster Incidents: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

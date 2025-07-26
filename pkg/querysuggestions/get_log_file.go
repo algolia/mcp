@@ -7,29 +7,26 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetLogFile registers the get_query_suggestions_log_file tool with the MCP server.
-func RegisterGetLogFile(mcps *server.MCPServer) {
-	getLogFileTool := mcp.NewTool(
-		"query_suggestions_get_log_file",
-		mcp.WithDescription("Retrieves the logs for a single Query Suggestions index"),
-		mcp.WithString(
-			"region",
-			mcp.Description("Analytics region (us or eu)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("Query Suggestions index name"),
-			mcp.Required(),
-		),
-	)
+// GetLogFileParams defines the parameters for retrieving Query Suggestions log file.
+type GetLogFileParams struct {
+	Region    string `json:"region" jsonschema:"Analytics region (us or eu)"`
+	IndexName string `json:"indexName" jsonschema:"Query Suggestions index name"`
+}
 
-	mcps.AddTool(getLogFileTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetLogFile registers the get_query_suggestions_log_file tool with the MCP server.
+func RegisterGetLogFile(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[GetLogFileParams]()
+	getLogFileTool := &mcp.Tool{
+		Name:        "query_suggestions_get_log_file",
+		Description: "Retrieves the logs for a single Query Suggestions index",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getLogFileTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetLogFileParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -37,12 +34,12 @@ func RegisterGetLogFile(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		region, _ := req.Params.Arguments["region"].(string)
+		region := params.Arguments.Region
 		if region == "" {
 			return nil, fmt.Errorf("region parameter is required")
 		}
 
-		indexName, _ := req.Params.Arguments["indexName"].(string)
+		indexName := params.Arguments.IndexName
 		if indexName == "" {
 			return nil, fmt.Errorf("indexName parameter is required")
 		}
@@ -87,6 +84,12 @@ func RegisterGetLogFile(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Query Suggestions Log File", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Query Suggestions Log File: %v", result),
+				},
+			},
+		}, nil
 	})
 }

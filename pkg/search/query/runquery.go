@@ -7,69 +7,52 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
-
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/opt"
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func RegisterRunQuery(mcps *server.MCPServer, client *search.Client, index *search.Index) {
-	runQueryTool := mcp.NewTool(
-		"run_query",
-		mcp.WithDescription("Run a query against the Algolia search index with advanced options"),
-		mcp.WithString(
-			"query",
-			mcp.Description("The query to run against the index"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("The index to search into"),
-		),
-		mcp.WithNumber(
-			"hitsPerPage",
-			mcp.Description("The number of hits to return per page"),
-		),
-		mcp.WithNumber(
-			"page",
-			mcp.Description("The page number (0-based) to retrieve"),
-		),
-		mcp.WithString(
-			"filters",
-			mcp.Description("The filter expression using Algolia's filter syntax (e.g., 'category:Book AND price < 100')"),
-		),
-		mcp.WithString(
-			"facets",
-			mcp.Description("Comma-separated list of attributes to facet on"),
-		),
-		mcp.WithString(
-			"restrictSearchableAttributes",
-			mcp.Description("Comma-separated list of attributes to search in"),
-		),
-	)
+// RunQueryParams defines the parameters for running a query.
+type RunQueryParams struct {
+	Query                        string `json:"query" jsonschema:"The query to run against the index"`
+	IndexName                    string `json:"indexName,omitempty" jsonschema:"The index to search into"`
+	HitsPerPage                  *int   `json:"hitsPerPage,omitempty" jsonschema:"The number of hits to return per page"`
+	Page                         *int   `json:"page,omitempty" jsonschema:"The page number (0-based) to retrieve"`
+	Filters                      string `json:"filters,omitempty" jsonschema:"The filter expression using Algolia's filter syntax (e.g., 'category:Book AND price < 100')"`
+	Facets                       string `json:"facets,omitempty" jsonschema:"Comma-separated list of attributes to facet on"`
+	RestrictSearchableAttributes string `json:"restrictSearchableAttributes,omitempty" jsonschema:"Comma-separated list of attributes to search in"`
+}
 
-	mcps.AddTool(runQueryTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		indexName, _ := req.Params.Arguments["indexName"].(string)
-		query, _ := req.Params.Arguments["query"].(string)
+func RegisterRunQuery(mcps *mcp.Server, client *search.Client, index *search.Index) {
+	schema, _ := jsonschema.For[RunQueryParams]()
+	runQueryTool := &mcp.Tool{
+		Name:        "run_query",
+		Description: "Run a query against the Algolia search index with advanced options",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, runQueryTool, func(_ context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[RunQueryParams]) (*mcp.CallToolResultFor[any], error) {
+		indexName := params.Arguments.IndexName
+		query := params.Arguments.Query
 
 		opts := []any{}
 
 		// Pagination
-		if hitsPerPage, ok := req.Params.Arguments["hitsPerPage"].(float64); ok {
-			opts = append(opts, opt.HitsPerPage(int(hitsPerPage)))
+		if params.Arguments.HitsPerPage != nil {
+			opts = append(opts, opt.HitsPerPage(*params.Arguments.HitsPerPage))
 		}
-		if page, ok := req.Params.Arguments["page"].(float64); ok {
-			opts = append(opts, opt.Page(int(page)))
+		if params.Arguments.Page != nil {
+			opts = append(opts, opt.Page(*params.Arguments.Page))
 		}
 
 		// Filtering and Faceting
-		if filters, ok := req.Params.Arguments["filters"].(string); ok && filters != "" {
-			opts = append(opts, opt.Filters(filters))
+		if params.Arguments.Filters != "" {
+			opts = append(opts, opt.Filters(params.Arguments.Filters))
 		}
-		if facets, ok := req.Params.Arguments["facets"].(string); ok && facets != "" {
-			facetList := strings.Split(facets, ",")
+		if params.Arguments.Facets != "" {
+			facetList := strings.Split(params.Arguments.Facets, ",")
 			for i := range facetList {
 				facetList[i] = strings.TrimSpace(facetList[i])
 			}
@@ -77,8 +60,8 @@ func RegisterRunQuery(mcps *server.MCPServer, client *search.Client, index *sear
 		}
 
 		// Relevance Configuration
-		if attrs, ok := req.Params.Arguments["restrictSearchableAttributes"].(string); ok && attrs != "" {
-			attrList := strings.Split(attrs, ",")
+		if params.Arguments.RestrictSearchableAttributes != "" {
+			attrList := strings.Split(params.Arguments.RestrictSearchableAttributes, ",")
 			for i := range attrList {
 				attrList[i] = strings.TrimSpace(attrList[i])
 			}

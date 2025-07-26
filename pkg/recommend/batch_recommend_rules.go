@@ -8,38 +8,28 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterBatchRecommendRules registers the batch_recommend_rules tool with the MCP server.
-func RegisterBatchRecommendRules(mcps *server.MCPServer) {
-	batchRecommendRulesTool := mcp.NewTool(
-		"recommend_batch_recommend_rules",
-		mcp.WithDescription("Create or update a batch of Recommend Rules"),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("Name of the index on which to perform the operation"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"model",
-			mcp.Description("Recommend model (related-products, bought-together, trending-facets, trending-items)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"rules",
-			mcp.Description("JSON array of Recommend rules to create or update"),
-			mcp.Required(),
-		),
-		mcp.WithBoolean(
-			"clearExistingRules",
-			mcp.Description("Whether to replace all existing rules with the provided batch"),
-		),
-	)
+// BatchRecommendRulesParams defines the parameters for batch operations on recommend rules.
+type BatchRecommendRulesParams struct {
+	IndexName          string `json:"indexName" jsonschema:"Name of the index on which to perform the operation"`
+	Model              string `json:"model" jsonschema:"Recommend model (related-products, bought-together, trending-facets, trending-items)"`
+	Rules              string `json:"rules" jsonschema:"JSON array of Recommend rules to create or update"`
+	ClearExistingRules *bool  `json:"clearExistingRules,omitempty" jsonschema:"Whether to replace all existing rules with the provided batch"`
+}
 
-	mcps.AddTool(batchRecommendRulesTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterBatchRecommendRules registers the batch_recommend_rules tool with the MCP server.
+func RegisterBatchRecommendRules(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[BatchRecommendRulesParams]()
+	batchRecommendRulesTool := &mcp.Tool{
+		Name:        "recommend_batch_recommend_rules",
+		Description: "Create or update a batch of Recommend Rules",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, batchRecommendRulesTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[BatchRecommendRulesParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for creating/updating rules
 		if appID == "" || apiKey == "" {
@@ -47,17 +37,17 @@ func RegisterBatchRecommendRules(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		indexName, _ := req.Params.Arguments["indexName"].(string)
+		indexName := params.Arguments.IndexName
 		if indexName == "" {
 			return nil, fmt.Errorf("indexName parameter is required")
 		}
 
-		model, _ := req.Params.Arguments["model"].(string)
+		model := params.Arguments.Model
 		if model == "" {
 			return nil, fmt.Errorf("model parameter is required")
 		}
 
-		rulesJSON, _ := req.Params.Arguments["rules"].(string)
+		rulesJSON := params.Arguments.Rules
 		if rulesJSON == "" {
 			return nil, fmt.Errorf("rules parameter is required")
 		}
@@ -88,7 +78,7 @@ func RegisterBatchRecommendRules(mcps *server.MCPServer) {
 		httpReq.Header.Set("Content-Type", "application/json")
 
 		// Add query parameters
-		if clearExistingRules, ok := req.Params.Arguments["clearExistingRules"].(bool); ok && clearExistingRules {
+		if params.Arguments.ClearExistingRules != nil && *params.Arguments.ClearExistingRules {
 			q := httpReq.URL.Query()
 			q.Add("clearExistingRules", "true")
 			httpReq.URL.RawQuery = q.Encode()
@@ -116,6 +106,12 @@ func RegisterBatchRecommendRules(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Recommend Rules Batch", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Recommend Rules Batch: %v", result),
+				},
+			},
+		}, nil
 	})
 }

@@ -6,19 +6,23 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetClustersStatus registers the get_clusters_status tool with the MCP server.
-func RegisterGetClustersStatus(mcps *server.MCPServer) {
-	getClustersStatusTool := mcp.NewTool(
-		"monitoring_get_clusters_status",
-		mcp.WithDescription("Retrieves the status of all Algolia clusters and instances"),
-	)
+// GetClustersStatusParams defines the parameters for retrieving clusters status.
+type GetClustersStatusParams struct{}
 
-	mcps.AddTool(getClustersStatusTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetClustersStatus registers the get_clusters_status tool with the MCP server.
+func RegisterGetClustersStatus(s *mcp.Server) {
+	schema, _ := jsonschema.For[GetClustersStatusParams]()
+	getClustersStatusTool := &mcp.Tool{
+		Name:        "monitoring_get_clusters_status",
+		Description: "Retrieves the status of all Algolia clusters and instances",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(s, getClustersStatusTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetClustersStatusParams]) (*mcp.CallToolResultFor[any], error) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := "https://status.algolia.com/1/status"
@@ -52,6 +56,12 @@ func RegisterGetClustersStatus(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Clusters Status", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Clusters Status: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

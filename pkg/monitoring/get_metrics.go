@@ -7,29 +7,26 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetMetrics registers the get_metrics tool with the MCP server.
-func RegisterGetMetrics(mcps *server.MCPServer) {
-	getMetricsTool := mcp.NewTool(
-		"monitoring_get_metrics",
-		mcp.WithDescription("Retrieves metrics related to your Algolia infrastructure, aggregated over a selected time window"),
-		mcp.WithString(
-			"metric",
-			mcp.Description("Metric to report (avg_build_time, ssd_usage, ram_search_usage, ram_indexing_usage, cpu_usage, or * for all)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"period",
-			mcp.Description("Period over which to aggregate the metrics (minute, hour, day, week, month)"),
-			mcp.Required(),
-		),
-	)
+// GetMetricsParams defines the parameters for retrieving metrics.
+type GetMetricsParams struct {
+	Metric string `json:"metric" jsonschema:"Metric to report (avg_build_time, ssd_usage, ram_search_usage, ram_indexing_usage, cpu_usage, or * for all)"`
+	Period string `json:"period" jsonschema:"Period over which to aggregate the metrics (minute, hour, day, week, month)"`
+}
 
-	mcps.AddTool(getMetricsTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetMetrics registers the get_metrics tool with the MCP server.
+func RegisterGetMetrics(s *mcp.Server) {
+	schema, _ := jsonschema.For[GetMetricsParams]()
+	getMetricsTool := &mcp.Tool{
+		Name:        "monitoring_get_metrics",
+		Description: "Retrieves metrics related to your Algolia infrastructure, aggregated over a selected time window",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(s, getMetricsTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetMetricsParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -37,12 +34,12 @@ func RegisterGetMetrics(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		metric, _ := req.Params.Arguments["metric"].(string)
+		metric := params.Arguments.Metric
 		if metric == "" {
 			return nil, fmt.Errorf("metric parameter is required")
 		}
 
-		period, _ := req.Params.Arguments["period"].(string)
+		period := params.Arguments.Period
 		if period == "" {
 			return nil, fmt.Errorf("period parameter is required")
 		}
@@ -107,6 +104,12 @@ func RegisterGetMetrics(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Infrastructure Metrics", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Infrastructure Metrics: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

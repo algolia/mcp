@@ -7,24 +7,25 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterListConfigs registers the list_query_suggestions_configs tool with the MCP server.
-func RegisterListConfigs(mcps *server.MCPServer) {
-	listConfigsTool := mcp.NewTool(
-		"query_suggestions_list_configs",
-		mcp.WithDescription("Retrieves all Query Suggestions configurations of your Algolia application"),
-		mcp.WithString(
-			"region",
-			mcp.Description("Analytics region (us or eu)"),
-			mcp.Required(),
-		),
-	)
+// ListConfigsParams defines the parameters for listing Query Suggestions configurations.
+type ListConfigsParams struct {
+	Region string `json:"region" jsonschema:"Analytics region (us or eu)"`
+}
 
-	mcps.AddTool(listConfigsTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterListConfigs registers the list_query_suggestions_configs tool with the MCP server.
+func RegisterListConfigs(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[ListConfigsParams]()
+	listConfigsTool := &mcp.Tool{
+		Name:        "query_suggestions_list_configs",
+		Description: "Retrieves all Query Suggestions configurations of your Algolia application",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, listConfigsTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[ListConfigsParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -32,7 +33,7 @@ func RegisterListConfigs(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		region, _ := req.Params.Arguments["region"].(string)
+		region := params.Arguments.Region
 		if region == "" {
 			return nil, fmt.Errorf("region parameter is required")
 		}
@@ -77,6 +78,12 @@ func RegisterListConfigs(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Query Suggestions Configurations", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Query Suggestions Configurations: %v", result),
+				},
+			},
+		}, nil
 	})
 }

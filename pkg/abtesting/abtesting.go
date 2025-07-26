@@ -1,9 +1,9 @@
 package abtesting
 
-import "github.com/mark3labs/mcp-go/server"
+import "github.com/modelcontextprotocol/go-sdk/mcp"
 
 // RegisterTools aggregates all abtesting tool registrations.
-func RegisterTools(mcps *server.MCPServer) {
+func RegisterTools(mcps *mcp.Server) {
 	RegisterListABTests(mcps)
 	RegisterGetABTest(mcps)
 	RegisterCreateABTest(mcps)

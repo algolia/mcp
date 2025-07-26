@@ -1,9 +1,16 @@
 package monitoring
 
-import "github.com/mark3labs/mcp-go/server"
+import "github.com/modelcontextprotocol/go-sdk/mcp"
 
 // RegisterTools aggregates all monitoring tool registrations.
-// TODO: Add monitoring tool registrations as needed.
-func RegisterTools(_ *server.MCPServer) {
-	// For now, no monitoring tools are registered.
+func RegisterTools(s *mcp.Server) {
+	RegisterGetClusterIncidents(s)
+	RegisterGetClusterStatus(s)
+	RegisterGetClustersStatus(s)
+	RegisterGetIncidents(s)
+	RegisterGetIndexingTime(s)
+	RegisterGetLatency(s)
+	RegisterGetMetrics(s)
+	RegisterGetReachability(s)
+	RegisterGetServers(s)
 }

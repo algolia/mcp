@@ -7,34 +7,27 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetRecommendRule registers the get_recommend_rule tool with the MCP server.
-func RegisterGetRecommendRule(mcps *server.MCPServer) {
-	getRecommendRuleTool := mcp.NewTool(
-		"recommend_get_recommend_rule",
-		mcp.WithDescription("Retrieve a Recommend rule that you previously created in the Algolia dashboard"),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("Name of the index on which to perform the operation"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"model",
-			mcp.Description("Recommend model (related-products, bought-together, trending-facets, trending-items)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"objectID",
-			mcp.Description("Unique record identifier"),
-			mcp.Required(),
-		),
-	)
+// GetRecommendRuleParams defines the parameters for retrieving a recommend rule.
+type GetRecommendRuleParams struct {
+	IndexName string `json:"indexName" jsonschema:"Name of the index on which to perform the operation"`
+	Model     string `json:"model" jsonschema:"Recommend model (related-products, bought-together, trending-facets, trending-items)"`
+	ObjectID  string `json:"objectID" jsonschema:"Unique record identifier"`
+}
 
-	mcps.AddTool(getRecommendRuleTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetRecommendRule registers the get_recommend_rule tool with the MCP server.
+func RegisterGetRecommendRule(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[GetRecommendRuleParams]()
+	getRecommendRuleTool := &mcp.Tool{
+		Name:        "recommend_get_recommend_rule",
+		Description: "Retrieve a Recommend rule that you previously created in the Algolia dashboard",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getRecommendRuleTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetRecommendRuleParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -42,17 +35,17 @@ func RegisterGetRecommendRule(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		indexName, _ := req.Params.Arguments["indexName"].(string)
+		indexName := params.Arguments.IndexName
 		if indexName == "" {
 			return nil, fmt.Errorf("indexName parameter is required")
 		}
 
-		model, _ := req.Params.Arguments["model"].(string)
+		model := params.Arguments.Model
 		if model == "" {
 			return nil, fmt.Errorf("model parameter is required")
 		}
 
-		objectID, _ := req.Params.Arguments["objectID"].(string)
+		objectID := params.Arguments.ObjectID
 		if objectID == "" {
 			return nil, fmt.Errorf("objectID parameter is required")
 		}
@@ -92,6 +85,12 @@ func RegisterGetRecommendRule(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Recommend Rule", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Recommend Rule: %v", result),
+				},
+			},
+		}, nil
 	})
 }

@@ -7,24 +7,25 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetCollection registers the get_collection tool with the MCP server.
-func RegisterGetCollection(mcps *server.MCPServer) {
-	getCollectionTool := mcp.NewTool(
-		"collections_get_collection",
-		mcp.WithDescription("Retrieve a collection by ID"),
-		mcp.WithString(
-			"id",
-			mcp.Description("Collection ID"),
-			mcp.Required(),
-		),
-	)
+// GetCollectionParams defines the parameters for retrieving a collection.
+type GetCollectionParams struct {
+	ID string `json:"id" jsonschema:"Collection ID"`
+}
 
-	mcps.AddTool(getCollectionTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetCollection registers the get_collection tool with the MCP server.
+func RegisterGetCollection(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[GetCollectionParams]()
+	getCollectionTool := &mcp.Tool{
+		Name:        "collections_get_collection",
+		Description: "Retrieve a collection by ID",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getCollectionTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetCollectionParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -32,7 +33,7 @@ func RegisterGetCollection(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		id, _ := req.Params.Arguments["id"].(string)
+		id := params.Arguments.ID
 		if id == "" {
 			return nil, fmt.Errorf("id parameter is required")
 		}
@@ -72,6 +73,12 @@ func RegisterGetCollection(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Collection", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Collection: %v", result),
+				},
+			},
+		}, nil
 	})
 }

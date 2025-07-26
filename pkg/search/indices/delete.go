@@ -6,22 +6,25 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func RegisterDelete(mcps *server.MCPServer, index *search.Index) {
-	deleteIndexTool := mcp.NewTool(
-		"delete_index",
-		mcp.WithDescription("Delete an index by removing all assets and configurations"),
-	)
+// DeleteIndexParams defines the parameters for deleting an index.
+type DeleteIndexParams struct{}
 
-	mcps.AddTool(deleteIndexTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func RegisterDelete(mcps *mcp.Server, index *search.Index) {
+	schema, _ := jsonschema.For[DeleteIndexParams]()
+	deleteIndexTool := &mcp.Tool{
+		Name:        "delete_index",
+		Description: "Delete an index by removing all assets and configurations",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, deleteIndexTool, func(_ context.Context, _ *mcp.ServerSession, _ *mcp.CallToolParamsFor[DeleteIndexParams]) (*mcp.CallToolResultFor[any], error) {
 		res, err := index.Delete()
 		if err != nil {
-			return mcp.NewToolResultError(
-				fmt.Sprintf("could not delete index: %v", err),
-			), nil
+			return nil, fmt.Errorf("could not delete index: %v", err)
 		}
 		return mcputil.JSONToolResult("task", res)
 	})

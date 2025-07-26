@@ -6,26 +6,27 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetIndexingTime registers the get_indexing_time tool with the MCP server.
-func RegisterGetIndexingTime(mcps *server.MCPServer) {
-	getIndexingTimeTool := mcp.NewTool(
-		"monitoring_get_indexing_time",
-		mcp.WithDescription("Retrieves average times for indexing operations for selected clusters"),
-		mcp.WithString(
-			"clusters",
-			mcp.Description("Subset of clusters, separated by commas (e.g., c1-de,c2-de,c3-de)"),
-			mcp.Required(),
-		),
-	)
+// GetIndexingTimeParams defines the parameters for retrieving indexing time.
+type GetIndexingTimeParams struct {
+	Clusters string `json:"clusters" jsonschema:"Subset of clusters, separated by commas (e.g., c1-de,c2-de,c3-de)"`
+}
 
-	mcps.AddTool(getIndexingTimeTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetIndexingTime registers the get_indexing_time tool with the MCP server.
+func RegisterGetIndexingTime(s *mcp.Server) {
+	schema, _ := jsonschema.For[GetIndexingTimeParams]()
+	getIndexingTimeTool := &mcp.Tool{
+		Name:        "monitoring_get_indexing_time",
+		Description: "Retrieves average times for indexing operations for selected clusters",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(s, getIndexingTimeTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetIndexingTimeParams]) (*mcp.CallToolResultFor[any], error) {
 		// Extract parameters
-		clusters, _ := req.Params.Arguments["clusters"].(string)
+		clusters := params.Arguments.Clusters
 		if clusters == "" {
 			return nil, fmt.Errorf("clusters parameter is required")
 		}
@@ -63,6 +64,12 @@ func RegisterGetIndexingTime(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Indexing Time", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Indexing Time: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

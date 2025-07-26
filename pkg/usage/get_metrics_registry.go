@@ -9,24 +9,25 @@ import (
 	"os"
 	"strings"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetMetricsRegistry registers the get_metrics_registry tool with the MCP server.
-func RegisterGetMetricsRegistry(mcps *server.MCPServer) {
-	getMetricsRegistryTool := mcp.NewTool(
-		"usage_get_metrics_registry",
-		mcp.WithDescription("Returns the list of available metrics"),
-		mcp.WithString(
-			"applications",
-			mcp.Description("Comma-separated list of Algolia Application IDs"),
-			mcp.Required(),
-		),
-	)
+// GetMetricsRegistryParams defines the parameters for retrieving metrics registry.
+type GetMetricsRegistryParams struct {
+	Applications string `json:"applications" jsonschema:"Comma-separated list of Algolia Application IDs"`
+}
 
-	mcps.AddTool(getMetricsRegistryTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetMetricsRegistry registers the get_metrics_registry tool with the MCP server.
+func RegisterGetMetricsRegistry(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[GetMetricsRegistryParams]()
+	getMetricsRegistryTool := &mcp.Tool{
+		Name:        "usage_get_metrics_registry",
+		Description: "Returns the list of available metrics",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getMetricsRegistryTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetMetricsRegistryParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -34,7 +35,7 @@ func RegisterGetMetricsRegistry(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		applicationsStr, _ := req.Params.Arguments["applications"].(string)
+		applicationsStr := params.Arguments.Applications
 		if applicationsStr == "" {
 			return nil, fmt.Errorf("applications parameter is required")
 		}
@@ -50,11 +51,11 @@ func RegisterGetMetricsRegistry(mcps *server.MCPServer) {
 		baseURL := "https://usage.algolia.com/2/metrics/registry"
 
 		// Add query parameters
-		params := url.Values{}
+		urlParams := url.Values{}
 		for _, app := range applications {
-			params.Add("application", app)
+			urlParams.Add("application", app)
 		}
-		url := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+		url := fmt.Sprintf("%s?%s", baseURL, urlParams.Encode())
 
 		httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
@@ -88,6 +89,12 @@ func RegisterGetMetricsRegistry(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Metrics Registry", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Metrics Registry: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

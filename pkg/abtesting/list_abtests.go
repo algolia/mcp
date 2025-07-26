@@ -7,35 +7,28 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/analytics"
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/opt"
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterListABTests registers the list_abtests tool with the MCP server.
-func RegisterListABTests(mcps *server.MCPServer) {
-	listABTestsTool := mcp.NewTool(
-		"abtesting_list_abtests",
-		mcp.WithDescription("List all A/B tests configured for this application"),
-		mcp.WithNumber(
-			"offset",
-			mcp.Description("Position of the first item to return"),
-		),
-		mcp.WithNumber(
-			"limit",
-			mcp.Description("Number of items to return"),
-		),
-		mcp.WithString(
-			"indexPrefix",
-			mcp.Description("Index name prefix. Only A/B tests for indices starting with this string are included in the response"),
-		),
-		mcp.WithString(
-			"indexSuffix",
-			mcp.Description("Index name suffix. Only A/B tests for indices ending with this string are included in the response"),
-		),
-	)
+// ListABTestsParams defines the parameters for listing A/B tests.
+type ListABTestsParams struct {
+	Offset      *float64 `json:"offset,omitempty" jsonschema:"Position of the first item to return"`
+	Limit       *float64 `json:"limit,omitempty" jsonschema:"Number of items to return"`
+	IndexPrefix *string  `json:"indexPrefix,omitempty" jsonschema:"Index name prefix. Only A/B tests for indices starting with this string are included in the response"`
+	IndexSuffix *string  `json:"indexSuffix,omitempty" jsonschema:"Index name suffix. Only A/B tests for indices ending with this string are included in the response"`
+}
 
-	mcps.AddTool(listABTestsTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterListABTests registers the list_abtests tool with the MCP server.
+func RegisterListABTests(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[ListABTestsParams]()
+	listABTestsTool := &mcp.Tool{
+		Name:        "abtesting_list_abtests",
+		Description: "List all A/B tests configured for this application",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, listABTestsTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[ListABTestsParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -48,20 +41,20 @@ func RegisterListABTests(mcps *server.MCPServer) {
 		// Prepare options
 		opts := []interface{}{}
 
-		if offset, ok := req.Params.Arguments["offset"].(float64); ok {
-			opts = append(opts, opt.Offset(int(offset)))
+		if params.Arguments.Offset != nil {
+			opts = append(opts, opt.Offset(int(*params.Arguments.Offset)))
 		}
 
-		if limit, ok := req.Params.Arguments["limit"].(float64); ok {
-			opts = append(opts, opt.Limit(int(limit)))
+		if params.Arguments.Limit != nil {
+			opts = append(opts, opt.Limit(int(*params.Arguments.Limit)))
 		}
 
-		if indexPrefix, ok := req.Params.Arguments["indexPrefix"].(string); ok && indexPrefix != "" {
-			opts = append(opts, opt.IndexPrefix(indexPrefix))
+		if params.Arguments.IndexPrefix != nil && *params.Arguments.IndexPrefix != "" {
+			opts = append(opts, opt.IndexPrefix(*params.Arguments.IndexPrefix))
 		}
 
-		if indexSuffix, ok := req.Params.Arguments["indexSuffix"].(string); ok && indexSuffix != "" {
-			opts = append(opts, opt.IndexSuffix(indexSuffix))
+		if params.Arguments.IndexSuffix != nil && *params.Arguments.IndexSuffix != "" {
+			opts = append(opts, opt.IndexSuffix(*params.Arguments.IndexSuffix))
 		}
 
 		// Get AB tests
@@ -77,6 +70,12 @@ func RegisterListABTests(mcps *server.MCPServer) {
 			"abtests": res.ABTests,
 		}
 
-		return mcputil.JSONToolResult("AB Tests", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("AB Tests: %v", result),
+				},
+			},
+		}, nil
 	})
 }

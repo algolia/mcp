@@ -7,24 +7,25 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterCommitCollection registers the commit_collection tool with the MCP server.
-func RegisterCommitCollection(mcps *server.MCPServer) {
-	commitCollectionTool := mcp.NewTool(
-		"collections_commit_collection",
-		mcp.WithDescription("Evaluates the changes on a collection and replicates them to the index"),
-		mcp.WithString(
-			"id",
-			mcp.Description("Collection ID"),
-			mcp.Required(),
-		),
-	)
+// CommitCollectionParams defines the parameters for committing a collection.
+type CommitCollectionParams struct {
+	ID string `json:"id" jsonschema:"Collection ID"`
+}
 
-	mcps.AddTool(commitCollectionTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterCommitCollection registers the commit_collection tool with the MCP server.
+func RegisterCommitCollection(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[CommitCollectionParams]()
+	commitCollectionTool := &mcp.Tool{
+		Name:        "collections_commit_collection",
+		Description: "Evaluates the changes on a collection and replicates them to the index",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, commitCollectionTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[CommitCollectionParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for committing collections
 		if appID == "" || apiKey == "" {
@@ -32,7 +33,7 @@ func RegisterCommitCollection(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		id, _ := req.Params.Arguments["id"].(string)
+		id := params.Arguments.ID
 		if id == "" {
 			return nil, fmt.Errorf("id parameter is required")
 		}
@@ -72,6 +73,12 @@ func RegisterCommitCollection(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Collection Commit Started", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Collection Commit Started: %v", result),
+				},
+			},
+		}, nil
 	})
 }

@@ -4,25 +4,27 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
-
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func RegisterSearchSynonym(mcps *server.MCPServer, index *search.Index) {
-	searchSynonymTool := mcp.NewTool(
-		"search_synonyms",
-		mcp.WithDescription("Search for synonyms in the Algolia index that match a query"),
-		mcp.WithString(
-			"query",
-			mcp.Description("The query to find synonyms for"),
-		),
-	)
+// SearchSynonymParams defines the parameters for searching synonyms.
+type SearchSynonymParams struct {
+	Query string `json:"query" jsonschema:"The query to find synonyms for"`
+}
 
-	mcps.AddTool(searchSynonymTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		query, _ := req.Params.Arguments["query"].(string)
+func RegisterSearchSynonym(mcps *mcp.Server, index *search.Index) {
+	schema, _ := jsonschema.For[SearchSynonymParams]()
+	searchSynonymTool := &mcp.Tool{
+		Name:        "search_synonyms",
+		Description: "Search for synonyms in the Algolia index that match a query",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, searchSynonymTool, func(_ context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[SearchSynonymParams]) (*mcp.CallToolResultFor[any], error) {
+		query := params.Arguments.Query
 
 		resp, err := index.SearchSynonyms(query)
 		if err != nil {

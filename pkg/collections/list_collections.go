@@ -8,36 +8,28 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterListCollections registers the list_collections tool with the MCP server.
-func RegisterListCollections(mcps *server.MCPServer) {
-	listCollectionsTool := mcp.NewTool(
-		"collections_list_collections",
-		mcp.WithDescription("Retrieve a list of all collections"),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("Name of the index"),
-			mcp.Required(),
-		),
-		mcp.WithNumber(
-			"offset",
-			mcp.Description("Number of items to skip (default to 0)"),
-		),
-		mcp.WithNumber(
-			"limit",
-			mcp.Description("Number of items per fetch (defaults to 10)"),
-		),
-		mcp.WithString(
-			"query",
-			mcp.Description("Query to filter collections"),
-		),
-	)
+// ListCollectionsParams defines the parameters for listing collections.
+type ListCollectionsParams struct {
+	IndexName string  `json:"indexName" jsonschema:"Name of the index"`
+	Offset    *int    `json:"offset,omitempty" jsonschema:"Number of items to skip (default to 0)"`
+	Limit     *int    `json:"limit,omitempty" jsonschema:"Number of items per fetch (defaults to 10)"`
+	Query     *string `json:"query,omitempty" jsonschema:"Query to filter collections"`
+}
 
-	mcps.AddTool(listCollectionsTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterListCollections registers the list_collections tool with the MCP server.
+func RegisterListCollections(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[ListCollectionsParams]()
+	listCollectionsTool := &mcp.Tool{
+		Name:        "collections_list_collections",
+		Description: "Retrieve a list of all collections",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, listCollectionsTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[ListCollectionsParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -45,7 +37,7 @@ func RegisterListCollections(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		indexName, _ := req.Params.Arguments["indexName"].(string)
+		indexName := params.Arguments.IndexName
 		if indexName == "" {
 			return nil, fmt.Errorf("indexName parameter is required")
 		}
@@ -67,16 +59,16 @@ func RegisterListCollections(mcps *server.MCPServer) {
 		q := httpReq.URL.Query()
 		q.Add("indexName", indexName)
 
-		if offset, ok := req.Params.Arguments["offset"].(float64); ok {
-			q.Add("offset", strconv.FormatInt(int64(offset), 10))
+		if params.Arguments.Offset != nil {
+			q.Add("offset", strconv.Itoa(*params.Arguments.Offset))
 		}
 
-		if limit, ok := req.Params.Arguments["limit"].(float64); ok {
-			q.Add("limit", strconv.FormatInt(int64(limit), 10))
+		if params.Arguments.Limit != nil {
+			q.Add("limit", strconv.Itoa(*params.Arguments.Limit))
 		}
 
-		if query, ok := req.Params.Arguments["query"].(string); ok && query != "" {
-			q.Add("query", query)
+		if params.Arguments.Query != nil && *params.Arguments.Query != "" {
+			q.Add("query", *params.Arguments.Query)
 		}
 
 		httpReq.URL.RawQuery = q.Encode()
@@ -103,6 +95,12 @@ func RegisterListCollections(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Collections", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Collections: %v", result),
+				},
+			},
+		}, nil
 	})
 }

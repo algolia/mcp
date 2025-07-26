@@ -8,34 +8,27 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetRecommendStatus registers the get_recommend_status tool with the MCP server.
-func RegisterGetRecommendStatus(mcps *server.MCPServer) {
-	getRecommendStatusTool := mcp.NewTool(
-		"recommend_get_recommend_status",
-		mcp.WithDescription("Check the status of a given task"),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("Name of the index on which to perform the operation"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"model",
-			mcp.Description("Recommend model (related-products, bought-together, trending-facets, trending-items)"),
-			mcp.Required(),
-		),
-		mcp.WithNumber(
-			"taskID",
-			mcp.Description("Unique task identifier"),
-			mcp.Required(),
-		),
-	)
+// GetRecommendStatusParams defines the parameters for getting recommend task status.
+type GetRecommendStatusParams struct {
+	IndexName string `json:"indexName" jsonschema:"Name of the index on which to perform the operation"`
+	Model     string `json:"model" jsonschema:"Recommend model (related-products, bought-together, trending-facets, trending-items)"`
+	TaskID    int64  `json:"taskID" jsonschema:"Unique task identifier"`
+}
 
-	mcps.AddTool(getRecommendStatusTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetRecommendStatus registers the get_recommend_status tool with the MCP server.
+func RegisterGetRecommendStatus(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[GetRecommendStatusParams]()
+	getRecommendStatusTool := &mcp.Tool{
+		Name:        "recommend_get_recommend_status",
+		Description: "Check the status of a given task",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getRecommendStatusTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetRecommendStatusParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -43,21 +36,20 @@ func RegisterGetRecommendStatus(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		indexName, _ := req.Params.Arguments["indexName"].(string)
+		indexName := params.Arguments.IndexName
 		if indexName == "" {
 			return nil, fmt.Errorf("indexName parameter is required")
 		}
 
-		model, _ := req.Params.Arguments["model"].(string)
+		model := params.Arguments.Model
 		if model == "" {
 			return nil, fmt.Errorf("model parameter is required")
 		}
 
-		taskIDFloat, ok := req.Params.Arguments["taskID"].(float64)
-		if !ok {
-			return nil, fmt.Errorf("taskID parameter is required and must be a number")
+		taskID := params.Arguments.TaskID
+		if taskID == 0 {
+			return nil, fmt.Errorf("taskID parameter is required and must be a non-zero number")
 		}
-		taskID := int64(taskIDFloat)
 
 		// Create HTTP client and request
 		client := &http.Client{}
@@ -94,6 +86,12 @@ func RegisterGetRecommendStatus(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Recommend Task Status", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Recommend Task Status: %v", result),
+				},
+			},
+		}, nil
 	})
 }

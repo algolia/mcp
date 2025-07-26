@@ -8,29 +8,26 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterEstimateABTest registers the estimate_abtest tool with the MCP server.
-func RegisterEstimateABTest(mcps *server.MCPServer) {
-	estimateABTestTool := mcp.NewTool(
-		"abtesting_estimate_abtest",
-		mcp.WithDescription("Estimate the sample size and duration of an A/B test based on historical traffic"),
-		mcp.WithString(
-			"variants",
-			mcp.Description("A/B test variants as JSON array (exactly 2 variants required). Each variant must have 'index' and 'trafficPercentage' fields, and may optionally have 'description' and 'customSearchParameters' fields."),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"configuration",
-			mcp.Description("A/B test configuration as JSON object. Must include 'minimumDetectableEffect' with 'size' and 'metric' fields. May optionally include 'outliers' and 'emptySearch' settings."),
-			mcp.Required(),
-		),
-	)
+// EstimateABTestParams defines the parameters for estimating an A/B test.
+type EstimateABTestParams struct {
+	Variants      string `json:"variants" jsonschema:"A/B test variants as JSON array (exactly 2 variants required). Each variant must have 'index' and 'trafficPercentage' fields and may optionally have 'description' and 'customSearchParameters' fields."`
+	Configuration string `json:"configuration" jsonschema:"A/B test configuration as JSON object. Must include 'minimumDetectableEffect' with 'size' and 'metric' fields. May optionally include 'outliers' and 'emptySearch' settings."`
+}
 
-	mcps.AddTool(estimateABTestTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterEstimateABTest registers the estimate_abtest tool with the MCP server.
+func RegisterEstimateABTest(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[EstimateABTestParams]()
+	estimateABTestTool := &mcp.Tool{
+		Name:        "abtesting_estimate_abtest",
+		Description: "Estimate the sample size and duration of an A/B test based on historical traffic",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, estimateABTestTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[EstimateABTestParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_API_KEY")
 		if appID == "" || apiKey == "" {
@@ -38,8 +35,8 @@ func RegisterEstimateABTest(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		variantsJSON, _ := req.Params.Arguments["variants"].(string)
-		configJSON, _ := req.Params.Arguments["configuration"].(string)
+		variantsJSON := params.Arguments.Variants
+		configJSON := params.Arguments.Configuration
 
 		// Parse variants JSON
 		var variants []any
@@ -109,6 +106,12 @@ func RegisterEstimateABTest(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("AB Test Estimate", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("AB Test Estimate: %v", result),
+				},
+			},
+		}, nil
 	})
 }

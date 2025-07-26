@@ -7,24 +7,25 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterDeleteCollection registers the delete_collection tool with the MCP server.
-func RegisterDeleteCollection(mcps *server.MCPServer) {
-	deleteCollectionTool := mcp.NewTool(
-		"collections_delete_collection",
-		mcp.WithDescription("Soft deletes a collection by setting 'deleted' to true"),
-		mcp.WithString(
-			"id",
-			mcp.Description("Collection ID"),
-			mcp.Required(),
-		),
-	)
+// DeleteCollectionParams defines the parameters for deleting a collection.
+type DeleteCollectionParams struct {
+	ID string `json:"id" jsonschema:"Collection ID"`
+}
 
-	mcps.AddTool(deleteCollectionTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterDeleteCollection registers the delete_collection tool with the MCP server.
+func RegisterDeleteCollection(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[DeleteCollectionParams]()
+	deleteCollectionTool := &mcp.Tool{
+		Name:        "collections_delete_collection",
+		Description: "Soft deletes a collection by setting 'deleted' to true",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, deleteCollectionTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[DeleteCollectionParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for deleting collections
 		if appID == "" || apiKey == "" {
@@ -32,7 +33,7 @@ func RegisterDeleteCollection(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		id, _ := req.Params.Arguments["id"].(string)
+		id := params.Arguments.ID
 		if id == "" {
 			return nil, fmt.Errorf("id parameter is required")
 		}
@@ -66,9 +67,15 @@ func RegisterDeleteCollection(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("Algolia API error: %v", errResp)
 		}
 
-		return mcputil.JSONToolResult("Collection Deleted", map[string]any{
-			"id":      id,
-			"deleted": true,
-		})
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Collection Deleted: %v", map[string]any{
+						"id":      id,
+						"deleted": true,
+					}),
+				},
+			},
+		}, nil
 	})
 }

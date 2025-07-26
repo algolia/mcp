@@ -6,26 +6,27 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetLatency registers the get_latency tool with the MCP server.
-func RegisterGetLatency(mcps *server.MCPServer) {
-	getLatencyTool := mcp.NewTool(
-		"monitoring_get_latency",
-		mcp.WithDescription("Retrieves the average latency for search requests for selected clusters"),
-		mcp.WithString(
-			"clusters",
-			mcp.Description("Subset of clusters, separated by commas (e.g., c1-de,c2-de,c3-de)"),
-			mcp.Required(),
-		),
-	)
+// GetLatencyParams defines the parameters for retrieving latency.
+type GetLatencyParams struct {
+	Clusters string `json:"clusters" jsonschema:"Subset of clusters, separated by commas (e.g., c1-de,c2-de,c3-de)"`
+}
 
-	mcps.AddTool(getLatencyTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetLatency registers the get_latency tool with the MCP server.
+func RegisterGetLatency(s *mcp.Server) {
+	schema, _ := jsonschema.For[GetLatencyParams]()
+	getLatencyTool := &mcp.Tool{
+		Name:        "monitoring_get_latency",
+		Description: "Retrieves the average latency for search requests for selected clusters",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(s, getLatencyTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetLatencyParams]) (*mcp.CallToolResultFor[any], error) {
 		// Extract parameters
-		clusters, _ := req.Params.Arguments["clusters"].(string)
+		clusters := params.Arguments.Clusters
 		if clusters == "" {
 			return nil, fmt.Errorf("clusters parameter is required")
 		}
@@ -63,6 +64,12 @@ func RegisterGetLatency(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Latency", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Latency: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }

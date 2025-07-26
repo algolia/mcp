@@ -8,50 +8,31 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterUpdateConfig registers the update_query_suggestions_config tool with the MCP server.
-func RegisterUpdateConfig(mcps *server.MCPServer) {
-	updateConfigTool := mcp.NewTool(
-		"query_suggestions_update_config",
-		mcp.WithDescription("Updates a Query Suggestions configuration"),
-		mcp.WithString(
-			"region",
-			mcp.Description("Analytics region (us or eu)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"indexName",
-			mcp.Description("Query Suggestions index name"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"sourceIndices",
-			mcp.Description("JSON array of source indices configurations"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"languages",
-			mcp.Description("JSON array of languages or boolean for deduplicating singular and plural suggestions"),
-		),
-		mcp.WithString(
-			"exclude",
-			mcp.Description("JSON array of words or regular expressions to exclude from the suggestions"),
-		),
-		mcp.WithBoolean(
-			"enablePersonalization",
-			mcp.Description("Whether to turn on personalized query suggestions"),
-		),
-		mcp.WithBoolean(
-			"allowSpecialCharacters",
-			mcp.Description("Whether to include suggestions with special characters"),
-		),
-	)
+// UpdateConfigParams defines the parameters for updating a Query Suggestions configuration.
+type UpdateConfigParams struct {
+	Region                 string  `json:"region" jsonschema:"Analytics region (us or eu)"`
+	IndexName              string  `json:"indexName" jsonschema:"Query Suggestions index name"`
+	SourceIndices          string  `json:"sourceIndices" jsonschema:"JSON array of source indices configurations"`
+	Languages              *string `json:"languages,omitempty" jsonschema:"JSON array of languages or boolean for deduplicating singular and plural suggestions"`
+	Exclude                *string `json:"exclude,omitempty" jsonschema:"JSON array of words or regular expressions to exclude from the suggestions"`
+	EnablePersonalization  *bool   `json:"enablePersonalization,omitempty" jsonschema:"Whether to turn on personalized query suggestions"`
+	AllowSpecialCharacters *bool   `json:"allowSpecialCharacters,omitempty" jsonschema:"Whether to include suggestions with special characters"`
+}
 
-	mcps.AddTool(updateConfigTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterUpdateConfig registers the update_query_suggestions_config tool with the MCP server.
+func RegisterUpdateConfig(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[UpdateConfigParams]()
+	updateConfigTool := &mcp.Tool{
+		Name:        "query_suggestions_update_config",
+		Description: "Updates a Query Suggestions configuration",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, updateConfigTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[UpdateConfigParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for updating configurations
 		if appID == "" || apiKey == "" {
@@ -59,17 +40,17 @@ func RegisterUpdateConfig(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		region, _ := req.Params.Arguments["region"].(string)
+		region := params.Arguments.Region
 		if region == "" {
 			return nil, fmt.Errorf("region parameter is required")
 		}
 
-		indexName, _ := req.Params.Arguments["indexName"].(string)
+		indexName := params.Arguments.IndexName
 		if indexName == "" {
 			return nil, fmt.Errorf("indexName parameter is required")
 		}
 
-		sourceIndicesJSON, _ := req.Params.Arguments["sourceIndices"].(string)
+		sourceIndicesJSON := params.Arguments.SourceIndices
 		if sourceIndicesJSON == "" {
 			return nil, fmt.Errorf("sourceIndices parameter is required")
 		}
@@ -91,28 +72,28 @@ func RegisterUpdateConfig(mcps *server.MCPServer) {
 		}
 
 		// Add optional parameters if provided
-		if languagesJSON, ok := req.Params.Arguments["languages"].(string); ok && languagesJSON != "" {
+		if params.Arguments.Languages != nil && *params.Arguments.Languages != "" {
 			var languages any
-			if err := json.Unmarshal([]byte(languagesJSON), &languages); err != nil {
+			if err := json.Unmarshal([]byte(*params.Arguments.Languages), &languages); err != nil {
 				return nil, fmt.Errorf("invalid languages JSON: %w", err)
 			}
 			requestBody["languages"] = languages
 		}
 
-		if excludeJSON, ok := req.Params.Arguments["exclude"].(string); ok && excludeJSON != "" {
+		if params.Arguments.Exclude != nil && *params.Arguments.Exclude != "" {
 			var exclude []string
-			if err := json.Unmarshal([]byte(excludeJSON), &exclude); err != nil {
+			if err := json.Unmarshal([]byte(*params.Arguments.Exclude), &exclude); err != nil {
 				return nil, fmt.Errorf("invalid exclude JSON: %w", err)
 			}
 			requestBody["exclude"] = exclude
 		}
 
-		if enablePersonalization, ok := req.Params.Arguments["enablePersonalization"].(bool); ok {
-			requestBody["enablePersonalization"] = enablePersonalization
+		if params.Arguments.EnablePersonalization != nil {
+			requestBody["enablePersonalization"] = *params.Arguments.EnablePersonalization
 		}
 
-		if allowSpecialCharacters, ok := req.Params.Arguments["allowSpecialCharacters"].(bool); ok {
-			requestBody["allowSpecialCharacters"] = allowSpecialCharacters
+		if params.Arguments.AllowSpecialCharacters != nil {
+			requestBody["allowSpecialCharacters"] = *params.Arguments.AllowSpecialCharacters
 		}
 
 		// Convert request body to JSON
@@ -156,6 +137,12 @@ func RegisterUpdateConfig(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Query Suggestions Configuration Updated", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("Query Suggestions Configuration Updated: %v", result),
+				},
+			},
+		}, nil
 	})
 }

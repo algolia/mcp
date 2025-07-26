@@ -6,22 +6,25 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func RegisterList(mcps *server.MCPServer, client *search.Client) {
-	listIndexTool := mcp.NewTool(
-		"list_indices",
-		mcp.WithDescription("List the indices in the application"),
-	)
+// ListIndicesParams defines the parameters for listing indices.
+type ListIndicesParams struct{}
 
-	mcps.AddTool(listIndexTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func RegisterList(mcps *mcp.Server, client *search.Client) {
+	schema, _ := jsonschema.For[ListIndicesParams]()
+	listIndexTool := &mcp.Tool{
+		Name:        "list_indices",
+		Description: "List the indices in the application",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, listIndexTool, func(_ context.Context, _ *mcp.ServerSession, _ *mcp.CallToolParamsFor[ListIndicesParams]) (*mcp.CallToolResultFor[any], error) {
 		res, err := client.ListIndices()
 		if err != nil {
-			return mcp.NewToolResultError(
-				fmt.Sprintf("could not list indices: %v", err),
-			), nil
+			return nil, fmt.Errorf("could not list indices: %v", err)
 		}
 		return mcputil.JSONToolResult("indices", res)
 	})

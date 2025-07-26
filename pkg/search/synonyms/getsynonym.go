@@ -6,25 +6,27 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
 	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func RegisterGetSynonym(mcps *server.MCPServer, index *search.Index) {
-	getSynonymTool := mcp.NewTool(
-		"get_synonym",
-		mcp.WithDescription("Get a synonym from the Algolia index by its ID"),
-		mcp.WithString(
-			"objectID",
-			mcp.Description("The unique identifier of the synonym to retrieve"),
-			mcp.Required(),
-		),
-	)
+// GetSynonymParams defines the parameters for getting a synonym.
+type GetSynonymParams struct {
+	ObjectID string `json:"objectID" jsonschema:"The unique identifier of the synonym to retrieve"`
+}
 
-	mcps.AddTool(getSynonymTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		objectID, ok := req.Params.Arguments["objectID"].(string)
-		if !ok {
-			return mcp.NewToolResultError("invalid objectID format"), nil
+func RegisterGetSynonym(mcps *mcp.Server, index *search.Index) {
+	schema, _ := jsonschema.For[GetSynonymParams]()
+	getSynonymTool := &mcp.Tool{
+		Name:        "get_synonym",
+		Description: "Get a synonym from the Algolia index by its ID",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, getSynonymTool, func(_ context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[GetSynonymParams]) (*mcp.CallToolResultFor[any], error) {
+		objectID := params.Arguments.ObjectID
+		if objectID == "" {
+			return nil, fmt.Errorf("invalid objectID format")
 		}
 
 		synonym, err := index.GetSynonym(objectID)

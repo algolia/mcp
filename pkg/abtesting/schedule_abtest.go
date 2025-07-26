@@ -8,39 +8,28 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterScheduleABTest registers the schedule_abtest tool with the MCP server.
-func RegisterScheduleABTest(mcps *server.MCPServer) {
-	scheduleABTestTool := mcp.NewTool(
-		"abtesting_schedule_abtest",
-		mcp.WithDescription("Schedule an A/B test to be started at a later time"),
-		mcp.WithString(
-			"name",
-			mcp.Description("A/B test name"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"scheduledAt",
-			mcp.Description("Date and time when the A/B test is scheduled to start, in RFC 3339 format (e.g., 2023-06-15T15:06:44.400601Z)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"endAt",
-			mcp.Description("End date and time of the A/B test, in RFC 3339 format (e.g., 2023-06-17T00:00:00Z)"),
-			mcp.Required(),
-		),
-		mcp.WithString(
-			"variants",
-			mcp.Description("A/B test variants as JSON array (exactly 2 variants required). Each variant must have 'index' and 'trafficPercentage' fields, and may optionally have 'description' and 'customSearchParameters' fields."),
-			mcp.Required(),
-		),
-	)
+// ScheduleABTestParams defines the parameters for scheduling an A/B test.
+type ScheduleABTestParams struct {
+	Name        string `json:"name" jsonschema:"A/B test name"`
+	ScheduledAt string `json:"scheduledAt" jsonschema:"Date and time when the A/B test is scheduled to start in RFC 3339 format (e.g. 2023-06-15T15:06:44.400601Z)"`
+	EndAt       string `json:"endAt" jsonschema:"End date and time of the A/B test in RFC 3339 format (e.g. 2023-06-17T00:00:00Z)"`
+	Variants    string `json:"variants" jsonschema:"A/B test variants as JSON array (exactly 2 variants required). Each variant must have 'index' and 'trafficPercentage' fields and may optionally have 'description' and 'customSearchParameters' fields."`
+}
 
-	mcps.AddTool(scheduleABTestTool, func(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterScheduleABTest registers the schedule_abtest tool with the MCP server.
+func RegisterScheduleABTest(mcps *mcp.Server) {
+	schema, _ := jsonschema.For[ScheduleABTestParams]()
+	scheduleABTestTool := &mcp.Tool{
+		Name:        "abtesting_schedule_abtest",
+		Description: "Schedule an A/B test to be started at a later time",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(mcps, scheduleABTestTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[ScheduleABTestParams]) (*mcp.CallToolResultFor[any], error) {
 		appID := os.Getenv("ALGOLIA_APP_ID")
 		apiKey := os.Getenv("ALGOLIA_WRITE_API_KEY") // Note: Using write API key for scheduling AB tests
 		if appID == "" || apiKey == "" {
@@ -48,10 +37,10 @@ func RegisterScheduleABTest(mcps *server.MCPServer) {
 		}
 
 		// Extract parameters
-		name, _ := req.Params.Arguments["name"].(string)
-		scheduledAt, _ := req.Params.Arguments["scheduledAt"].(string)
-		endAt, _ := req.Params.Arguments["endAt"].(string)
-		variantsJSON, _ := req.Params.Arguments["variants"].(string)
+		name := params.Arguments.Name
+		scheduledAt := params.Arguments.ScheduledAt
+		endAt := params.Arguments.EndAt
+		variantsJSON := params.Arguments.Variants
 
 		// Parse variants JSON
 		var variants []any
@@ -112,6 +101,12 @@ func RegisterScheduleABTest(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("AB Test Scheduled", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: fmt.Sprintf("AB Test Scheduled: %v", result),
+				},
+			},
+		}, nil
 	})
 }

@@ -6,19 +6,23 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/algolia/mcp/pkg/mcputil"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RegisterGetIncidents registers the get_incidents tool with the MCP server.
-func RegisterGetIncidents(mcps *server.MCPServer) {
-	getIncidentsTool := mcp.NewTool(
-		"monitoring_get_incidents",
-		mcp.WithDescription("Retrieves known incidents for all clusters"),
-	)
+// GetIncidentsParams defines the parameters for retrieving incidents.
+type GetIncidentsParams struct{}
 
-	mcps.AddTool(getIncidentsTool, func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// RegisterGetIncidents registers the get_incidents tool with the MCP server.
+func RegisterGetIncidents(s *mcp.Server) {
+	schema, _ := jsonschema.For[GetIncidentsParams]()
+	getIncidentsTool := &mcp.Tool{
+		Name:        "monitoring_get_incidents",
+		Description: "Retrieves known incidents for all clusters",
+		InputSchema: schema,
+	}
+
+	mcp.AddTool(s, getIncidentsTool, func(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[GetIncidentsParams]) (*mcp.CallToolResultFor[any], error) {
 		// Create HTTP client and request
 		client := &http.Client{}
 		url := "https://status.algolia.com/1/incidents"
@@ -52,6 +56,12 @@ func RegisterGetIncidents(mcps *server.MCPServer) {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 
-		return mcputil.JSONToolResult("Incidents", result)
+		return &mcp.CallToolResultFor[any]{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Text: "Incidents: " + fmt.Sprintf("%v", result),
+				},
+			},
+		}, nil
 	})
 }
