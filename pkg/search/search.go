@@ -9,10 +9,10 @@ import (
 )
 
 // RegisterAll registers all Search tools with the MCP server (both read and write).
-func RegisterAll(mcps *server.MCPServer, client *search.Client, index *search.Index) {
+func RegisterAll(mcps *server.MCPServer, readClient *search.Client, writeClient *search.Client, read *search.Index, write *search.Index) {
 	// Register both read and write operations.
-	RegisterReadAll(mcps, client, index)
-	RegisterWriteAll(mcps, client, index)
+	RegisterReadAll(mcps, readClient, read)
+	RegisterWriteAll(mcps, writeClient, write)
 }
 
 // RegisterReadAll registers read-only Search tools with the MCP server.
