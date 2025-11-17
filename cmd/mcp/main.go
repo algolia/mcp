@@ -53,16 +53,24 @@ func main() {
 	}
 
 	// Initialize Algolia client
-	var searchClient *search.Client
-	var searchIndex *search.Index
+	var searchReadClient *search.Client
+	var searchWriteClient *search.Client
+	var searchReadIndex *search.Index
+	var searchWriteIndex *search.Index
 
 	// Get Algolia credentials from environment variables
 	appID := os.Getenv("ALGOLIA_APP_ID")
 	apiKey := os.Getenv("ALGOLIA_API_KEY")
+	writeAPIKey := os.Getenv("ALGOLIA_WRITE_API_KEY")
 	indexName := os.Getenv("ALGOLIA_INDEX_NAME")
 
-	searchClient = search.NewClient(appID, apiKey)
-	searchIndex = searchClient.InitIndex(indexName)
+	// Read Client and Index
+	searchReadClient = search.NewClient(appID, apiKey)
+	searchReadIndex = searchReadClient.InitIndex(indexName)
+
+	// Write Client and Index
+	searchWriteClient = search.NewClient(appID, writeAPIKey)
+	searchWriteIndex = searchWriteClient.InitIndex(indexName)
 
 	// Register tools from enabled packages.
 	if enabled["abtesting"] {
@@ -84,14 +92,14 @@ func main() {
 		recommend.RegisterAll(mcps)
 	}
 	if enabled["search"] {
-		searchpkg.RegisterAll(mcps)
+		searchpkg.RegisterAll(mcps, searchReadClient, searchWriteClient, searchReadIndex, searchWriteIndex)
 	} else {
 		// Only register specific search tools if "search" is not enabled
 		if enabled["search_read"] {
-			searchpkg.RegisterReadAll(mcps, searchClient, searchIndex)
+			searchpkg.RegisterReadAll(mcps, searchReadClient, searchReadIndex)
 		}
 		if enabled["search_write"] {
-			searchpkg.RegisterWriteAll(mcps, searchClient, searchIndex)
+			searchpkg.RegisterWriteAll(mcps, searchWriteClient, searchWriteIndex)
 		}
 	}
 	if enabled["usage"] {
