@@ -84,7 +84,7 @@ func main() {
 		recommend.RegisterAll(mcps)
 	}
 	if enabled["search"] {
-		searchpkg.RegisterAll(mcps)
+		searchpkg.RegisterAll(mcps, searchClient, searchIndex)
 	} else {
 		// Only register specific search tools if "search" is not enabled
 		if enabled["search_read"] {
