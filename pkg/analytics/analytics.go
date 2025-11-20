@@ -8,4 +8,5 @@ func RegisterTools(mcps *server.MCPServer) {
 	RegisterGetNoResultsRate(mcps)
 	RegisterGetSearchesCount(mcps)
 	RegisterGetTopSearches(mcps)
+	RegisterGetUsersCount(mcps)
 }
