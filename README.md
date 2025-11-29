@@ -1,5 +1,11 @@
 # MCP
 
+> 🚀 Hosted MCP Now Available
+> We’re excited to announce that a Hosted MCP is now available! This makes it easier than ever to connect your external data and APIs to ChatGPT — no setup or hosting required.
+> 
+> 👉 Learn more and get started in [our documentation](https://www.algolia.com/doc/guides/algolia-ai/mcp-server/).
+
+
 This repository contains experimental [Model Context Protocol (or MCP)](https://modelcontextprotocol.io/introduction) servers for interacting with Algolia APIs. This MCP repo is something we're sharing for you to explore and experiment with. Feel free to use it, fork it, or build on top of it — but just know that it's not officially supported by Algolia and isn't covered under our SLA. We might update it, break it, or remove it entirely at any time. If you customize or configure things here, there's a chance that work could be lost. Also, using MCP in production could affect your Algolia usage.
 
 We also have a Node.js MCP Server that you can find here: https://github.com/algolia/mcp-node.
