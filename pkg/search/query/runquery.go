@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/opt"
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
-	"github.com/algolia/mcp/pkg/mcputil"
 )
 
 func RegisterRunQuery(mcps *server.MCPServer, client *search.Client, index *search.Index) {
@@ -97,6 +97,20 @@ func RegisterRunQuery(mcps *server.MCPServer, client *search.Client, index *sear
 		}
 		log.Printf("Search for %q took %v", query, time.Since(start))
 
-		return mcputil.JSONToolResult("query results", resp)
+		// Marshal only the Hits field from the response
+		hitsJSONData, err := json.Marshal(resp.Hits) // Assume resp has a 'Hits' field
+		if err != nil {
+			return nil, fmt.Errorf("could not marshal search hits to JSON: %w", err)
+		}
+
+		// Construct the result with the hits-only JSON string
+		return &mcp.CallToolResult{
+			Content: []mcp.Content{
+				&mcp.TextContent{
+					Type: "text",
+					Text: string(hitsJSONData), // Use the hits-only JSON
+				},
+			},
+		}, nil
 	})
 }
